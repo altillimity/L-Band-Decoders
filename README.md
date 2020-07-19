@@ -6,4 +6,4 @@ Mostly WIP stuff, or small programs here and there.
 ## FengYun Decoder
 
 A small standalone program that makes frames from synced FY-3 symbols. Basically a FengYun decoder!
-More info the dedicated folder.
+More info in the dedicated folder.
