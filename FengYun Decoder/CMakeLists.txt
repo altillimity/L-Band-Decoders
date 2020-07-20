@@ -1,7 +1,5 @@
 cmake_minimum_required (VERSION 3.0.0)
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
-
 project (FengYun)
 file(GLOB_RECURSE FengYun_CPPS src/*.cpp src/viterbi_lib/metrics.c src/viterbi_lib/tab.c src/viterbi_lib/viterbi.c)
 

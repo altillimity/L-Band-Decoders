@@ -7,3 +7,8 @@ Mostly WIP stuff, or small programs here and there.
 
 A small standalone program that makes frames from synced FY-3 symbols. Basically a FengYun decoder!
 More info in the dedicated folder.
+
+## MetOp Decoder
+
+A small standalone program that makes frames from synced MetOp A-B-C symbols. Basically a MetOp decoder!
+More info in the dedicated folder.
