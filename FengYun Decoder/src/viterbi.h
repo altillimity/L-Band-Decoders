@@ -55,5 +55,5 @@ public:
     FengyunViterbi(bool sync_check, float ber_threshold, int insync_after, int outsync_after, int reset_after);
     ~FengyunViterbi();
 
-    int work(std::vector<std::complex<float>>& in, size_t size, uint8_t* output);
+    int work(std::vector<std::complex<float>> &in, size_t size, uint8_t *output);
 };

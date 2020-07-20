@@ -1,20 +1,24 @@
 #include <diff.h>
 
-std::vector<uint8_t> FengyunDiff::work(std::vector<uint8_t> in)
+std::vector<uint8_t> FengyunDiff::work(std::vector<uint8_t>& in)
 {
     std::vector<uint8_t> out;
 
+    // Process all given samples
     for (uint8_t sample : in)
     {
+        // Push new sample into buffer
         buffer[0] = buffer[1];
         buffer[1] = sample;
 
+        // We need at least 2
         if (inBuf < 2)
         {
             inBuf++;
             continue;
         }
 
+        // Perform differential decoding
         Xin_1 = buffer[0] & 0x02;
         Yin_1 = buffer[0] & 0x01;
         Xin = buffer[1] & 0x02;
