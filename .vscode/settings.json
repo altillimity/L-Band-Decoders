@@ -55,6 +55,7 @@
         "bit": "cpp",
         "cwctype": "cpp",
         "optional": "cpp",
-        "ratio": "cpp"
+        "ratio": "cpp",
+        "*.cuh": "cpp"
     }
 }
