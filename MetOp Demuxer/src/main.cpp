@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
 
     CADUDeframer deframer;             // CADU Deframer
     CADUReedSolomon reedSolomon;       // RS correction
-    CCSDSFramer framer(9, 103, 12966); // AVHRR data, frame length is fixed since anything else is corrupted data
+    CCSDSFramer framer(std::stoi(argv[3]), std::stoi(argv[4]), std::stoi(argv[5])); // CCSDS Framer
 
     int rsfail = 0, ccsds = 0;
 
