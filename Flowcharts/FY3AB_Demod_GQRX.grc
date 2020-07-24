@@ -169,7 +169,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [712, 300.0]
+    coordinate: [712, 404.0]
     rotation: 0
     state: enabled
 - name: blocks_file_source_0
@@ -231,8 +231,27 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [628.0, 72]
+    coordinate: [628.0, 176]
     rotation: 270
+    state: enabled
+- name: digital_cma_equalizer_cc_0
+  id: digital_cma_equalizer_cc
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    modulus: '1'
+    mu: '0.001'
+    num_taps: '15'
+    sps: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [380.0, 48]
+    rotation: 90
     state: enabled
 - name: digital_costas_loop_cc_0
   id: digital_costas_loop_cc
@@ -249,7 +268,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [448, 24.0]
+    coordinate: [520, 24.0]
     rotation: 0
     state: enabled
 - name: qtgui_const_sink_x_0
@@ -341,7 +360,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [780.0, 48]
+    coordinate: [780.0, 152]
     rotation: 90
     state: enabled
 - name: qtgui_freq_sink_x_0
@@ -541,8 +560,9 @@ connections:
 - [blocks_throttle_0_0_1_0, '0', virtual_sink_0_0, '0']
 - [digital_clock_recovery_mm_xx_0, '0', blocks_file_sink_0_0_0, '0']
 - [digital_clock_recovery_mm_xx_0, '0', qtgui_const_sink_x_0, '0']
+- [digital_cma_equalizer_cc_0, '0', digital_costas_loop_cc_0, '0']
 - [digital_costas_loop_cc_0, '0', digital_clock_recovery_mm_xx_0, '0']
-- [root_raised_cosine_filter_0, '0', digital_costas_loop_cc_0, '0']
+- [root_raised_cosine_filter_0, '0', digital_cma_equalizer_cc_0, '0']
 - [root_raised_cosine_filter_0, '0', qtgui_freq_sink_x_0, '0']
 - [root_raised_cosine_filter_0, '0', qtgui_waterfall_sink_x_0, '0']
 - [virtual_source_0, '0', analog_agc_xx_0_0, '0']
