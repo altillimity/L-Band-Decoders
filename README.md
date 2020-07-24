@@ -12,3 +12,8 @@ More info in the dedicated folder.
 
 A small standalone program that makes frames from synced MetOp A-B-C symbols. Basically a MetOp decoder!
 More info in the dedicated folder.
+
+## CCSDS Demuxer
+
+Program to demultiplex / deframe CCSDS frames from unsynced CADUs.
+More info in the dedicated folder.
