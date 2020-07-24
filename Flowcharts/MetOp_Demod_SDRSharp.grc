@@ -340,7 +340,7 @@ blocks:
     bus_structure: null
     coordinate: [568, 28.0]
     rotation: 0
-    state: enabled
+    state: bypassed
 - name: digital_costas_loop_cc_0
   id: digital_costas_loop_cc
   parameters:
