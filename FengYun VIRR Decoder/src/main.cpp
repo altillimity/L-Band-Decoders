@@ -32,9 +32,9 @@ int main(int argc, char *argv[])
     int frame = 0;
 
     // This will need some fixes
-    unsigned short *imageBufferR = new unsigned short[10000 * 2048];
-    unsigned short *imageBufferG = new unsigned short[10000 * 2048];
-    unsigned short *imageBufferB = new unsigned short[10000 * 2048];
+    uint16_t *imageBufferR = new uint16_t[10000 * 2048];
+    uint16_t *imageBufferG = new uint16_t[10000 * 2048];
+    uint16_t *imageBufferB = new uint16_t[10000 * 2048];
 
     // Read until EOF
     while (!data_in.eof())
@@ -57,21 +57,21 @@ int main(int argc, char *argv[])
         // Channel R
         for (int i = 0; i < 2048; i++)
         {
-            uint16_t pixel = virrBuffer[1 + i * 10];
+            uint16_t pixel = virrBuffer[8 + i * 10];
             imageBufferR[frame * 2048 + i] = pixel * 60;
         }
 
         // Channel G
         for (int i = 0; i < 2048; i++)
         {
-            uint16_t pixel = virrBuffer[1 + i * 10];
+            uint16_t pixel = virrBuffer[0 + i * 10];
             imageBufferG[frame * 2048 + i] = pixel * 60;
         }
 
         // Channel B
         for (int i = 0; i < 2048; i++)
         {
-            uint16_t pixel = virrBuffer[0 + i * 10];
+            uint16_t pixel = virrBuffer[6 + i * 10];
             imageBufferB[frame * 2048 + i] = pixel * 60;
         }
 
@@ -80,11 +80,15 @@ int main(int argc, char *argv[])
     }
 
     // Print it all out into a .png
-    cimg_library::CImg<unsigned short> finalImage(2048, frame, 1, 3);
+    cimg_library::CImg<uint16_t> finalImage(2048, frame, 1, 3);
 
-    cimg_library::CImg<unsigned short> channelImageR(&imageBufferR[0], 2048, frame);
-    cimg_library::CImg<unsigned short> channelImageG(&imageBufferG[0], 2048, frame);
-    cimg_library::CImg<unsigned short> channelImageB(&imageBufferB[0], 2048, frame);
+    cimg_library::CImg<uint16_t> channelImageR(&imageBufferR[0], 2048, frame);
+    cimg_library::CImg<uint16_t> channelImageG(&imageBufferG[0], 2048, frame);
+    cimg_library::CImg<uint16_t> channelImageB(&imageBufferB[0], 2048, frame);
+
+    channelImageR.equalize(1000);
+    channelImageG.equalize(1000);
+    channelImageB.equalize(1000);
 
     finalImage.draw_image(0, 0, 0, 0, channelImageR);
     finalImage.draw_image(0, 0, 0, 1, channelImageG);
