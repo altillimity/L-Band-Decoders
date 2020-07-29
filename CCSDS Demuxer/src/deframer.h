@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <array>
+#include <cstdint>
 #include "ccsds.h"
 
 class CADUDeframer

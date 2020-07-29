@@ -7,6 +7,7 @@
 #include <vector>
 #include <array>
 #include "ccsds.h"
+#include <cstdint>
 
 class CCSDSFramer
 {

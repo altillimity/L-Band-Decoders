@@ -23,6 +23,7 @@ int main(int argc, char *argv[])
     TCLAP::ValueArg<int> valueSize("s", "size", "Frame size", true, 0, "size");
     TCLAP::SwitchArg valueFengYun("f", "fengyun", "FengYun imager deframing");
     TCLAP::SwitchArg valueAddHeader("m", "marker", "Add sync marker (1ACFFC1D) for easy syncing");
+    TCLAP::SwitchArg valueVerbose("v", "verbose", "Show found frame length");
 
     // Register all of the above options
     cmd.add(valueInput);
@@ -32,6 +33,7 @@ int main(int argc, char *argv[])
     cmd.add(valueSize);
     cmd.add(valueFengYun);
     cmd.add(valueAddHeader);
+    cmd.add(valueVerbose);
 
     // Parse
     try
@@ -114,6 +116,9 @@ int main(int argc, char *argv[])
                         data_out.put(CADU_ASM_3);
                         data_out.put(CADU_ASM_4);
                     }
+
+                    if (valueVerbose.getValue())
+                        std::cout << frame.size() << std::endl;
 
                     for (uint8_t &byte : frame)
                         data_out.put(byte);
