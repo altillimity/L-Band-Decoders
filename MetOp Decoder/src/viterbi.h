@@ -55,5 +55,7 @@ public:
     MetopViterbi(bool sync_check, float ber_threshold, int insync_after, int outsync_after, int reset_after);
     ~MetopViterbi();
 
+    unsigned char &getState();
+
     int work(std::complex<float> *in, size_t size, uint8_t *output);
 };

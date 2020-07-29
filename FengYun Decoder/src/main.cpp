@@ -17,8 +17,23 @@ inline bool getBit(T data, int bit)
     return (data >> bit) & 1;
 }
 
+// Return filesize
+size_t getFilesize(std::string filepath)
+{
+    std::ifstream file(filepath, std::ios::binary | std::ios::ate);
+    std::size_t fileSize = file.tellg();
+    file.close();
+    return fileSize;
+}
+
 int main(int argc, char *argv[])
 {
+    if (argc < 3)
+    {
+        std::cout << "Usage : " << argv[0] << " inputfile.bin outputframes.bin" << std::endl;
+        return 1;
+    }
+
     // Output and Input file
     std::ifstream data_in(argv[1], std::ios::binary);
     std::ofstream data_out(argv[2], std::ios::binary);
@@ -40,6 +55,14 @@ int main(int argc, char *argv[])
 
     // Diff decoder input and output
     std::vector<uint8_t> *diff_in = new std::vector<uint8_t>, *diff_out = new std::vector<uint8_t>;
+
+    // Complete filesize
+    size_t filesize = getFilesize(argv[1]);
+
+    // Data we wrote out
+    size_t data_out_total = 0;
+
+    std::cout << "FengYun Decoder by Aang23" << std::endl;
 
     // Read until there is no more data
     while (!data_in.eof())
@@ -87,11 +110,19 @@ int main(int argc, char *argv[])
             data_out.write((char *)&toPush, 1);
         }
 
+        data_out_total += diff_out->size() / 4;
+
+        // Console stuff
+        std::cout << '\r' << "Viterbi 1 : " << (viterbi1.getState() == 0 ? "NO SYNC" : viterbi1.getState() == 1 ? "SYNCING" : "SYNCED") << ", Viterbi 2 : " << (viterbi2.getState() == 0 ? "NO SYNC" : viterbi2.getState() == 1 ? "SYNCING" : "SYNCED") << ", Data out : " << round(data_out_total / 1e5) / 10.0f << " MB, Progress : " << round(((float)data_in.tellg() / (float)filesize) * 1000.0f) / 10.0f << "%     " << std::flush;
+
         // Clear everything for the next run
         diff_in->clear();
         iSamples->clear();
         qSamples->clear();
     }
+
+    std::cout << std::endl
+              << "Done! Enjoy" << std::endl;
 
     // Close files
     data_in.close();
