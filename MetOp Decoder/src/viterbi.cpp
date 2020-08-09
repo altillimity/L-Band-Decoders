@@ -217,7 +217,7 @@ void MetopViterbi::phase_move_two(unsigned char phase_state, unsigned int symsnr
         for (unsigned int ii = 0; ii < symsnr; ii++)
         {
             out_I[ii] = in_Q[ii];
-            out_Q[ii] = -in_I[ii];
+            out_Q[ii] = ~in_I[ii]; //out_Q[ii] = -in_I[ii];
         }
         break;
 
@@ -338,10 +338,33 @@ int MetopViterbi::work(std::complex<float> *in_syms, size_t size, uint8_t *outpu
         {
             //printf("Viterbi decoder : ST_IDLE: switch to next state >> enter_syncing()\n");
             //printf("Viterbi decoder : d_phase = %i, d_shift = %i\n", d_phase, d_shift);
-            enter_syncing();
+            enter_synced(); //enter_syncing();
+            if (d_shift == 0)
+            {
+                if (d_curr_is_even == false)
+                {
+                    d_shift_main_decoder = 1;
+                }
+                else
+                {
+                    d_shift_main_decoder = 0;
+                }
+            }
+            else
+            {
+                if (d_curr_is_even == false)
+                {
+                    d_shift_main_decoder = 0;
+                }
+                else
+                {
+                    d_shift_main_decoder = 1;
+                }
+            }
         }
 
         break;
+        /*
     //ST_SYNCING is checking BER in next few chunks, until few valid BER's is reached
     case ST_SYNCING:
         if (d_shift == 0)
@@ -397,7 +420,7 @@ int MetopViterbi::work(std::complex<float> *in_syms, size_t size, uint8_t *outpu
         }
 
         break;
-
+*/
     //ST_SYNCED check BER on incoming data if eneble, activate main decoder decode all incoming data
     case ST_SYNCED:
         if (d_sync_check == true)

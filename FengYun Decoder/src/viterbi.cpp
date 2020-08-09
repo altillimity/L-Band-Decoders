@@ -65,6 +65,8 @@ void FengyunViterbi::enter_idle()
     d_sym_count = 0;
     d_valid_ber_found = true;
     d_viterbi_enable = false;
+    d_invalid_packet_count = 0;
+    d_shift_main_decoder = 0;
 }
 //#############################################################################
 
@@ -218,7 +220,7 @@ void FengyunViterbi::phase_move_two(unsigned char phase_state, unsigned int syms
         for (unsigned int ii = 0; ii < symsnr; ii++)
         {
             out_I[ii] = in_Q[ii];
-            out_Q[ii] = -in_I[ii];
+            out_Q[ii] = ~in_I[ii];
         }
         break;
 
@@ -261,17 +263,6 @@ int FengyunViterbi::work(std::vector<std::complex<float>> &in_syms, size_t size,
         input_symbols_buffer_Q[i] = (unsigned char)(floor(sample));
     }
 
-    /*
-	//this if is not maybe necesarry
-	if(ninputs*2 < TestBitsLen ){
-		d_chan_len = ninputs*2; 
-		printf("Viterbi decoder : count of input items ninputs %i was lower than TestBitsLen %i  \n", ninputs, TestBitsLen);
-	}
-	else{
-		d_chan_len = TestBitsLen;
-	} 
-*/
-
     //check data chunk, even or odd syms count
     if (ninputs % 2 == 0)
     {
@@ -291,7 +282,7 @@ int FengyunViterbi::work(std::vector<std::complex<float>> &in_syms, size_t size,
         //first check BER of NO SHIFTed data for 0 and 90 degree rotation
         d_valid_ber_found = true;
 
-        for (unsigned char st = 0; st < 2; st++)
+        for (unsigned char st = 0; st < 1; st++) //2
         {
             phase_move_two(st, TestBitsLen, input_symbols_buffer_I, input_symbols_buffer_Q, input_symbols_buffer_I_ph, input_symbols_buffer_Q_ph);
             d_ber[0][st] = ber_calc1(d_00_st0, d_00_st1, TestBitsLen, input_symbols_buffer_I_ph, input_symbols_buffer_Q_ph);
@@ -303,15 +294,16 @@ int FengyunViterbi::work(std::vector<std::complex<float>> &in_syms, size_t size,
             d_phase = 0;
             d_shift = 0;
         }
-        else if (d_ber[0][1] < d_ber_threshold)
+        /*        else if (d_ber[0][1] < d_ber_threshold)
         {
             d_phase = 1;
             d_shift = 0;
         }
+*/
         else
         {
             //second check BER of NO SHIFTed data for 0 and 90 degree rotation
-            for (unsigned char st = 0; st < 2; st++)
+            for (unsigned char st = 0; st < 1; st++) //2
             {
                 phase_move_two(st, TestBitsLen, input_symbols_buffer_I, input_symbols_buffer_Q, input_symbols_buffer_I_ph, input_symbols_buffer_Q_ph);
                 d_ber[1][st] = ber_calc1(d_00_st0, d_00_st1, TestBitsLen, input_symbols_buffer_I_ph + 1, input_symbols_buffer_Q_ph + 1);
@@ -322,12 +314,12 @@ int FengyunViterbi::work(std::vector<std::complex<float>> &in_syms, size_t size,
                 d_shift = 1;
                 d_phase = 0;
             }
-            else if (d_ber[1][1] < d_ber_threshold)
+            /*            else if (d_ber[1][1] < d_ber_threshold)
             {
                 d_phase = 1;
                 d_shift = 1;
             }
-            //all ber >> threshold, wait for next data chunk
+            //all ber >> threshold, wait for next data chunk      */
             else
             {
                 d_valid_ber_found = false;
@@ -337,64 +329,32 @@ int FengyunViterbi::work(std::vector<std::complex<float>> &in_syms, size_t size,
 
         if (d_valid_ber_found == true)
         {
-            // printf("Viterbi decoder : ST_IDLE: switch to next state >> enter_syncing()\n");
-            // printf("Viterbi decoder : d_phase = %i, d_shift = %i\n", d_phase, d_shift);
-            enter_syncing();
-        }
-
-        break;
-    //ST_SYNCING is checking BER in next few chunks, until few valid BER's is reached
-    case ST_SYNCING:
-        if (d_shift == 0)
-        {
-            phase_move_two(d_phase, TestBitsLen, input_symbols_buffer_I, input_symbols_buffer_Q, input_symbols_buffer_I_ph, input_symbols_buffer_Q_ph);
-            d_ber[0][0] = ber_calc1(d_00_st0, d_00_st1, TestBitsLen, input_symbols_buffer_I_ph, input_symbols_buffer_Q_ph);
-        }
-        else
-        {
-            phase_move_two(d_phase, TestBitsLen, input_symbols_buffer_I, input_symbols_buffer_Q, input_symbols_buffer_I_ph, input_symbols_buffer_Q_ph);
-            d_ber[0][0] = ber_calc1(d_00_st0, d_00_st1, TestBitsLen, input_symbols_buffer_I_ph + 1, input_symbols_buffer_Q_ph + 1);
-        }
-
-        if (d_ber[0][0] < d_ber_threshold)
-        {
-            d_valid_packet_count++;
-            // printf("Viterbi decoder : ST_SYNCING: PACKET %i BER = %4f < d_ber_threshold %4f \n", d_valid_packet_count, d_ber[0][0], d_ber_threshold);
-
-            if (d_valid_packet_count == d_insync_after)
+            //printf("Viterbi decoder : ST_IDLE: switch to next state >> enter_syncED()\n");
+            //printf("Viterbi decoder : d_phase = %i, d_shift = %i\n", d_phase, d_shift);
+            enter_synced();
+            //data shift +1 determine - for main decoder
+            if (d_shift == 0)
             {
-                // printf("Viterbi decoder : ST_SYNCING: switch to next state >> enter_synced()\n");
-                enter_synced();
-                //data shift +1 determine - for main decoder
-                if (d_shift == 0)
+                if (d_curr_is_even == false)
                 {
-                    if (d_curr_is_even == false)
-                    {
-                        d_shift_main_decoder = 1;
-                    }
-                    else
-                    {
-                        d_shift_main_decoder = 0;
-                    }
+                    d_shift_main_decoder = 1;
                 }
                 else
                 {
-                    if (d_curr_is_even == false)
-                    {
-                        d_shift_main_decoder = 0;
-                    }
-                    else
-                    {
-                        d_shift_main_decoder = 1;
-                    }
+                    d_shift_main_decoder = 0;
                 }
-
-                // printf("Viterbi decoder : d_phase = %i, d_shift_main_decoder = %i\n", d_phase, d_shift_main_decoder);
             }
-        }
-        else
-        {
-            enter_idle();
+            else
+            {
+                if (d_curr_is_even == false)
+                {
+                    d_shift_main_decoder = 0;
+                }
+                else
+                {
+                    d_shift_main_decoder = 1;
+                }
+            }
         }
 
         break;
@@ -427,10 +387,9 @@ int FengyunViterbi::work(std::vector<std::complex<float>> &in_syms, size_t size,
             else
             {
                 d_invalid_packet_count = 0;
+                d_viterbi_enable = true;
             }
         }
-
-        d_viterbi_enable = true;
 
         break;
 

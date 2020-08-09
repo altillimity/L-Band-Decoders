@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
     std::ofstream data_out(argv[2], std::ios::binary);
 
     // Our 2 Viterbi decoders and differential decoder
-    FengyunViterbi viterbi1(true, 0.150f, 5, 20, 50), viterbi2(true, 0.150f, 5, 20, 50);
+    FengyunViterbi viterbi1(true, 0.200f, 1, 10, 50), viterbi2(true, 0.200f, 1, 10, 50);
     FengyunDiff diff;
 
     // Viterbi output buffer
@@ -62,11 +62,18 @@ int main(int argc, char *argv[])
     // Data we wrote out
     size_t data_out_total = 0;
 
+    std::cout << "---------------------------" << std::endl;
     std::cout << "FengYun Decoder by Aang23" << std::endl;
+    std::cout << "Fixed by Tomi HA6NAB" << std::endl;
+    std::cout << "---------------------------" << std::endl;
+    std::cout << std::endl;
+
+    int shift = 0;
 
     // Read until there is no more data
     while (!data_in.eof())
     {
+
         // Read a buffer
         data_in.read((char *)buffer, sizeof(std::complex<float>) * BUFFER_SIZE);
 
@@ -74,28 +81,86 @@ int main(int argc, char *argv[])
         for (int i = 0; i < BUFFER_SIZE / 2; i++)
         {
             using namespace std::complex_literals;
-            std::complex<float> iS = buffer[i * 2].imag() + buffer[i * 2 + 1].imag() * 1if;
-            std::complex<float> qS = buffer[i * 2].real() + buffer[i * 2 + 1].real() * 1if;
+            std::complex<float> iS = buffer[i * 2 + shift].imag() + buffer[i * 2 + 1 + shift].imag() * 1if;
+            std::complex<float> qS = buffer[i * 2 + shift].real() + buffer[i * 2 + 1 + shift].real() * 1if;
             iSamples->push_back(iS);
             qSamples->push_back(qS);
         }
-
         // Run Viterbi!
         int v1 = viterbi1.work(*qSamples, qSamples->size(), viterbi1_out);
         int v2 = viterbi2.work(*iSamples, iSamples->size(), viterbi2_out);
 
         // Interleave and pack output into 2 bits chunks
-        if (v1 == v2 && v1 > 0 && v2 > 0)
+        if (v1 > 0 || v2 > 0)
         {
-            uint8_t bit1, bit2, bitCb;
-            for (int y = 0; y < v1; y++)
+            if (v1 == v2 && v1 > 0)
             {
-                for (int i = 7; i >= 0; i--)
+                uint8_t bit1, bit2, bitCb;
+                for (int y = 0; y < v1; y++)
                 {
-                    bit1 = getBit<uint8_t>(viterbi1_out[y], i);
-                    bit2 = getBit<uint8_t>(viterbi2_out[y], i);
-                    bitCb = bit2 << 1 | bit1;
-                    diff_in->push_back(bitCb);
+                    for (int i = 7; i >= 0; i--)
+                    {
+                        bit1 = getBit<uint8_t>(viterbi1_out[y], i);
+                        bit2 = getBit<uint8_t>(viterbi2_out[y], i);
+                        bitCb = bit2 << 1 | bit1;
+                        diff_in->push_back(bitCb);
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (shift)
+            {
+                shift = 0;
+            }
+            else
+            {
+                shift = 1;
+            }
+            diff_in->clear();
+            iSamples->clear();
+            qSamples->clear();
+            // Deinterleave I & Q for the 2 Viterbis
+            for (int i = 0; i < BUFFER_SIZE / 2; i++)
+            {
+                using namespace std::complex_literals;
+                std::complex<float> iS = buffer[i * 2 + shift].imag() + buffer[i * 2 + 1 + shift].imag() * 1if;
+                std::complex<float> qS = buffer[i * 2 + shift].real() + buffer[i * 2 + 1 + shift].real() * 1if;
+                iSamples->push_back(iS);
+                qSamples->push_back(qS);
+            }
+            // Run Viterbi!
+            int v1 = viterbi1.work(*qSamples, qSamples->size(), viterbi1_out);
+            int v2 = viterbi2.work(*iSamples, iSamples->size(), viterbi2_out);
+
+            // Interleave and pack output into 2 bits chunks
+            if (v1 > 0 || v2 > 0)
+            {
+                if (v1 == v2 && v1 > 0)
+                {
+                    uint8_t bit1, bit2, bitCb;
+                    for (int y = 0; y < v1; y++)
+                    {
+                        for (int i = 7; i >= 0; i--)
+                        {
+                            bit1 = getBit<uint8_t>(viterbi1_out[y], i);
+                            bit2 = getBit<uint8_t>(viterbi2_out[y], i);
+                            bitCb = bit2 << 1 | bit1;
+                            diff_in->push_back(bitCb);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if (shift)
+                {
+                    shift = 0;
+                }
+                else
+                {
+                    shift = 1;
                 }
             }
         }

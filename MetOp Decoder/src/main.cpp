@@ -44,7 +44,11 @@ int main(int argc, char *argv[])
     // Data we wrote out
     size_t data_out_total = 0;
 
+    std::cout << "---------------------------" << std::endl;
     std::cout << "MetOp Decoder by Aang23" << std::endl;
+    std::cout << "Fixed by Tomi HA6NAB" << std::endl;
+    std::cout << "---------------------------" << std::endl;
+    std::cout << std::endl;
 
     // Read until EOF
     while (!data_in.eof())

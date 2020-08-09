@@ -23,10 +23,10 @@ int main(int argc, char *argv[])
     std::ifstream data_in(argv[1], std::ios::binary);
 
     // Read buffer
-    uint8_t buffer[BUFFER_SIZE];
+    uint8_t *buffer = new uint8_t[BUFFER_SIZE];
 
     // VIRR Packet buffer
-    uint16_t virrBuffer[204800];
+    uint16_t *virrBuffer = new uint16_t[204800];
 
     // Frame counter
     int frame = 0;
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
         int pos = 424; // VIRR Data position, found through a bit viewer
 
         // Convert into 10-bits values
-        for (int i = 0; i < 204800; i += 4)
+        for (int i = 0; i < 20480; i += 4)
         {
             virrBuffer[i] = (buffer[pos + 0] << 2) | (buffer[pos + 1] >> 6);
             virrBuffer[i + 1] = ((buffer[pos + 1] % 64) << 4) | (buffer[pos + 2] >> 4);
