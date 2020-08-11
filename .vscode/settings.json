@@ -56,6 +56,22 @@
         "cwctype": "cpp",
         "optional": "cpp",
         "ratio": "cpp",
-        "*.cuh": "cpp"
+        "*.cuh": "cpp",
+        "csignal": "cpp",
+        "hash_set": "cpp",
+        "bitset": "cpp",
+        "compare": "cpp",
+        "concepts": "cpp",
+        "condition_variable": "cpp",
+        "forward_list": "cpp",
+        "unordered_set": "cpp",
+        "iomanip": "cpp",
+        "mutex": "cpp",
+        "ranges": "cpp",
+        "stop_token": "cpp",
+        "cfenv": "cpp",
+        "typeindex": "cpp",
+        "valarray": "cpp",
+        "variant": "cpp"
     }
 }
