@@ -5,7 +5,11 @@
 
 #include "viterbi.h"
 
+#ifndef _WIN32
+#include <unistd.h>
+#else
 #include "getopt/getopt.h"
+#endif
 // Return filesize
 size_t getFilesize(std::string filepath)
 {
