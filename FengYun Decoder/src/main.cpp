@@ -1,3 +1,9 @@
+#ifndef _WIN32
+#include <unistd.h>
+#else
+#include "getopt/getopt.h"
+#endif
+
 #include <iostream>
 #include <fstream>
 #include <complex>
@@ -7,7 +13,7 @@
 #include "viterbi.h"
 #include "diff.h"
 
-#include "getopt/getopt.h"
+
 
 // Processing buffer size
 #define BUFFER_SIZE (8192 * 5)
