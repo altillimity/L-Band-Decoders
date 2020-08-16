@@ -2,12 +2,8 @@ cmake_minimum_required (VERSION 3.0.0)
 
 project (FengYun)
 
+file(GLOB_RECURSE FengYun_CPPS src/diff.cpp src/main.cpp src/viterbi.cpp src/viterbi_lib/metrics.c src/viterbi_lib/tab.c src/viterbi_lib/viterbi.c)
 
-if(WIN32)
-	file(GLOB_RECURSE FengYun_CPPS src/*.cpp src/viterbi_lib/metrics.c src/viterbi_lib/tab.c src/viterbi_lib/viterbi.c)
-else()
-	file(GLOB_RECURSE FengYun_CPPS src/diff.cpp src/main.cpp src/viterbi.cpp src/viterbi_lib/metrics.c src/viterbi_lib/tab.c src/viterbi_lib/viterbi.c)
-endif()
 add_executable(FengYun ${FengYun_CPPS})
 
 target_include_directories(FengYun PUBLIC src)
