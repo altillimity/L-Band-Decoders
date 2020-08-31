@@ -1,5 +1,5 @@
-# CCSDS Demuxer
+# METEOR Demuxer
 
-This program takes raw unsynced CCSDS frames (CADU / etc) and unpacks them into CCSDS frames. It supports FY inner deframing as well.
+This program takes raw unsynced METEOR-M2x frames (CADU / etc) and demux them.
 
-Usage : see `./CCSDS-Demux --help`
+Usage : see `./METEOR-Demux --help`
