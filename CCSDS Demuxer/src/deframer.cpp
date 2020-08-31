@@ -1,9 +1,10 @@
 #include "deframer.h"
 
-// 3 States
-#define STATE_NOSYNC 0
-#define STATE_SYNCING 1
-#define STATE_SYNCED 2
+// Definitely still needs tuning
+#define THRESOLD_STATE_3 10
+#define THRESOLD_STATE_2 6
+#define THRESOLD_STATE_1 2
+#define THRESOLD_STATE_0 0
 
 // Returns the asked bit!
 template <typename T>
@@ -66,7 +67,7 @@ CADUDeframer::CADUDeframer()
     skip = 0;
     good = 0;
     errors = 0;
-    state = STATE_NOSYNC;
+    state = THRESOLD_STATE_0;
     bit_inversion = false;
 }
 
@@ -144,77 +145,111 @@ std::vector<std::array<uint8_t, CADU_SIZE>> CADUDeframer::work(uint8_t *input, s
             else if (skip == 1) // Last run should NOT reset the loop
                 skip--;
 
-            // Initial state : STATE_NOSYNC
-            // We search for a perfectly matching sync word, 1 found and we start STATE_SYNCING
-            if (state == STATE_NOSYNC)
+            // State 0 : Searches bit-per-bit for a perfect sync marker. If one is found, we jump to state 6!
+            if (state == THRESOLD_STATE_0)
             {
-                if (shifter == CADU_ASM) // ASM
-                {
-                    numFrames++;
-                    state = STATE_SYNCING;
-                    writeFrame = true;
-                    errors = 0;
-                }
-                else if (shifter == CADU_ASM_INV) // NASM to handle bit inversion
-                {
-                    numFrames++;
-                    state = STATE_SYNCING;
-                    writeFrame = true;
-                    errors = 0;
-                    bit_inversion = true;
-                }
-            }
-            // Secondary state : STATE_SYNCING
-            // We allow a few more mismatches and scan frame-per-frame
-            // 10 good frames and we get into STATE_SYNCED, 4 errors and we go back to STATE_NOSYNC
-            else if (state == STATE_SYNCING)
-            {
-                if (checkSyncMarker(shifter, CADU_ASM) <= 5)
+                if (shifter == CADU_ASM)
                 {
                     numFrames++;
                     writeFrame = true;
+                    state = THRESOLD_STATE_2;
+                    //skip = 1024 * 8;
                     errors = 0;
-                    good++;
-                }
-                else
-                {
-                    skip = (CADU_SIZE)*8;
-                    errors++;
-                }
-
-                if (errors > 3)
-                {
-                    state = STATE_NOSYNC;
-                    skip = 0;
-                }
-
-                if (good == 10)
-                {
-                    state = STATE_SYNCED;
+                    sep_errors = 0;
                     good = 0;
-                    errors = 0;
                 }
             }
-            // Third state : STATE_SYNCED
-            // We assume perfect sync and allow very high ASM mismatches
-            // A single error and we go back to STATE_SYNCING
-            else if (state == STATE_SYNCED)
+            // State 1 : Each header is expect 1024 bytes away. Only 6 mistmatches tolerated.
+            // If 5 consecutive good frames are found, we hop to state 22, though, 5 consecutive
+            // errors (here's why errors is reset each time a frame is good) means reset to state 0
+            // 2 frame errors pushes us to state 2
+            else if (state == THRESOLD_STATE_2)
             {
-                if (checkSyncMarker(shifter, CADU_ASM) <= 17)
+                if (checkSyncMarker(shifter, CADU_ASM) <= state)
                 {
                     numFrames++;
                     writeFrame = true;
+                    good++;
                     errors = 0;
+                    sep_errors = 0;
+
+                    if (good == 5)
+                    {
+                        state = THRESOLD_STATE_3;
+                        good = 0;
+                        errors = 0;
+                    }
                 }
                 else
                 {
-                    skip = (CADU_SIZE)*8;
                     errors++;
-                }
+                    sep_errors++;
 
-                if (errors > 0)
+                    if (errors == 5)
+                    {
+                        state = THRESOLD_STATE_0;
+                        //skip = 1;
+                        errors = 0;
+                        sep_errors = 0;
+                        good = 0;
+                    }
+
+                    if (sep_errors == 2)
+                    {
+                        state = THRESOLD_STATE_1;
+                        state_2_bits_count = 0;
+                        //bitsToIncrement = 1;
+                        errors = 0;
+                        sep_errors = 0;
+                        good = 0;
+                    }
+                }
+            }
+            // State 2 : Goes back to bit-per-bit syncing... 3 frame scanned and we got back to state 0, 1 good and back to 6!
+            else if (state == THRESOLD_STATE_1)
+            {
+                if (checkSyncMarker(shifter, CADU_ASM) <= state)
                 {
-                    state = STATE_SYNCING;
+                    numFrames++;
+                    writeFrame = true;
+                    state = THRESOLD_STATE_2;
+                    //skip = 1024 * 8;
+                    errors = 0;
+                    sep_errors = 0;
+                    good = 0;
+                }
+                else
+                {
+                    state_2_bits_count++;
+                    errors++;
+                    //skip = CADU_SIZE * 8;
+
+                    if (errors >= CADU_SIZE * 8 * 2)
+                    {
+                        state = THRESOLD_STATE_0;
+                        //bitsToIncrement = 1;
+                        errors = 0;
+                        sep_errors = 0;
+                        good = 0;
+                    }
+                }
+            }
+            // State 3 : We assume perfect lock and allow very high mismatchs.
+            // 1 error and back to state 6
+            // Note : Lowering the thresold seems to yield better of a sync
+            else if (state == THRESOLD_STATE_3)
+            {
+                if (checkSyncMarker(shifter, CADU_ASM) <= state)
+                {
+                    numFrames++;
+                    writeFrame = true;
+                }
+                else
+                {
+                    errors = 0;
+                    good = 0;
+                    sep_errors = 0;
+                    state = THRESOLD_STATE_2;
                 }
             }
         }

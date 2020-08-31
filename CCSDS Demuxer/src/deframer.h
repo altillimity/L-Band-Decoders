@@ -25,7 +25,7 @@ private:
     // Values used to output a found frame
     int wroteBits, wroteBytes;
     uint8_t outBuffer;
-    int skip, errors, good;
+    int skip, errors, good, sep_errors, state_2_bits_count;
     // Output Frame buffer
     std::array<uint8_t, CADU_SIZE> frameBuffer;
     // Found frame count

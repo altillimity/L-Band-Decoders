@@ -48,7 +48,11 @@ std::vector<std::vector<uint8_t>> SimpleDeframer<SYNC_T, SYNC_SIZE, FRAME_SIZE, 
             {
                 // Get a bit, push it
                 uint8_t bit = getBit<uint8_t>(byte, i);
-                shifter = ((shifter << 1) % (long)pow(2, SYNC_SIZE)) | bit;
+
+                if (sizeof(SYNC_T) * 8 != SYNC_SIZE)
+                    shifter = ((shifter << 1) % (long)pow(2, SYNC_SIZE)) | bit;
+                else
+                    shifter = (shifter << 1) | bit;
 
                 // Writing a frame!
                 if (writeFrame)
@@ -57,9 +61,9 @@ std::vector<std::vector<uint8_t>> SimpleDeframer<SYNC_T, SYNC_SIZE, FRAME_SIZE, 
                     if (outputBits == 0)
                     {
                         SYNC_T syncAsm = ASM_SYNC;
-                        for (int y = SYNC_SIZE; y >= 0; y--)
+                        for (int y = SYNC_SIZE + 1; y >= 0; y--)
                         {
-                            pushBit(getBit<uint64_t>(syncAsm, y));
+                            pushBit(getBit<SYNC_T>(syncAsm, y));
                             outputBits++;
                         }
                     }
