@@ -11,10 +11,3 @@ target_link_libraries(NOAA-Demodulator PUBLIC m)
 
 find_package(Threads REQUIRED)
 target_link_libraries(NOAA-Demodulator PUBLIC Threads::Threads)
-
-if(WIN32 AND NOT MINGW)
-    find_package(PNG CONFIG REQUIRED)
-else()
-    find_package(PNG REQUIRED)
-endif()
-target_link_libraries(NOAA-Demodulator PUBLIC PNG::PNG)
