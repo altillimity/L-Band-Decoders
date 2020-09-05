@@ -22,7 +22,6 @@ private:
 
     void do_reset();
     void enter_idle();
-    void enter_syncing();
     void enter_synced();
 
     int d_mettab[2][256]; //metric table for continuous decoder

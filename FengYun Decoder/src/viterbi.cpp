@@ -71,22 +71,13 @@ void FengyunViterbi::enter_idle()
 //#############################################################################
 
 //*****************************************************************************
-//    ENTER syncing state
-//*****************************************************************************
-void FengyunViterbi::enter_syncing()
-{
-    d_state = ST_SYNCING;
-    d_valid_packet_count = 0;
-}
-//#############################################################################
-
-//*****************************************************************************
 //    ENTER synced state
 //*****************************************************************************
 void FengyunViterbi::enter_synced()
 {
     d_state = ST_SYNCED;
     d_invalid_packet_count = 0;
+    d_viterbi_enable = true;
 }
 
 //*****************************************************************************
@@ -201,35 +192,6 @@ float FengyunViterbi::ber_calc1(
 }
 
 //*****************************************************************************
-//    VITERBI DECODER, two states symbols phase moving, 0 and 90 degree
-//*****************************************************************************
-void FengyunViterbi::phase_move_two(unsigned char phase_state, unsigned int symsnr, unsigned char *in_I, unsigned char *in_Q, unsigned char *out_I, unsigned char *out_Q)
-{
-    switch (phase_state)
-    {
-
-    case ST_PHASE_0: //nothing is changed
-        for (unsigned int ii = 0; ii < symsnr; ii++)
-        {
-            out_I[ii] = in_I[ii];
-            out_Q[ii] = in_Q[ii];
-        }
-        break;
-
-    case ST_PHASE_1: // rotate 90degree
-        for (unsigned int ii = 0; ii < symsnr; ii++)
-        {
-            out_I[ii] = in_Q[ii];
-            out_Q[ii] = ~in_I[ii];
-        }
-        break;
-
-    default:
-        throw std::runtime_error("Viterbi decoder: bad phase state\n");
-    }
-}
-
-//*****************************************************************************
 //    VITERBI DECODER, GENERAL WORK FUNCTION
 //
 //*****************************************************************************
@@ -237,8 +199,6 @@ int FengyunViterbi::work(std::vector<std::complex<float>> &in_syms, size_t size,
 {
     unsigned char *out = &output[0];
     int ninputs = size;
-    unsigned char input_symbols_buffer_I[ninputs];    //buffer for to char translated input symbols I
-    unsigned char input_symbols_buffer_Q[ninputs];    //buffer for to char translated input symbols Q
     unsigned char input_symbols_buffer_I_ph[ninputs]; //buffer for phase moved symbols I
     unsigned char input_symbols_buffer_Q_ph[ninputs]; //buffer for phase moved symbols Q
     unsigned int chan_len;
@@ -248,31 +208,29 @@ int FengyunViterbi::work(std::vector<std::complex<float>> &in_syms, size_t size,
     for (unsigned int i = 0; i < ninputs; i++)
     {
         // Translate and clip [-1.0..1.0] to [28..228]
-        sample = in_syms[i].real() * 100.0 + 128.0;
+        sample = in_syms[i].real() * 127.0 + 128.0;
         if (sample > 255.0)
             sample = 255.0;
         else if (sample < 0.0)
             sample = 0.0;
-        input_symbols_buffer_I[i] = (unsigned char)(floor(sample));
+        input_symbols_buffer_I_ph[i] = (unsigned char)(floor(sample));
 
-        sample = in_syms[i].imag() * 100.0 + 128.0;
+        sample = in_syms[i].imag() * 127.0 + 128.0;
         if (sample > 255.0)
             sample = 255.0;
         else if (sample < 0.0)
             sample = 0.0;
-        input_symbols_buffer_Q[i] = (unsigned char)(floor(sample));
+        input_symbols_buffer_Q_ph[i] = (unsigned char)(floor(sample));
     }
 
     //check data chunk, even or odd syms count
     if (ninputs % 2 == 0)
     {
         d_curr_is_even = true; //first bit in next processed input syms paket will be even.
-        //// printf("Viterbi decoder :Data chunk is EVEN \n");
     }
     else
     {
         d_curr_is_even = false;
-        // printf("Viterbi decoder :Data chunk is ODD  \n");
     }
 
     switch (d_state)
@@ -281,56 +239,28 @@ int FengyunViterbi::work(std::vector<std::complex<float>> &in_syms, size_t size,
     case ST_IDLE:
         //first check BER of NO SHIFTed data for 0 and 90 degree rotation
         d_valid_ber_found = true;
-
-        for (unsigned char st = 0; st < 1; st++) //2
-        {
-            phase_move_two(st, TestBitsLen, input_symbols_buffer_I, input_symbols_buffer_Q, input_symbols_buffer_I_ph, input_symbols_buffer_Q_ph);
-            d_ber[0][st] = ber_calc1(d_00_st0, d_00_st1, TestBitsLen, input_symbols_buffer_I_ph, input_symbols_buffer_Q_ph);
-            // printf("Viterbi decoder :noshift  PH%i:  d_ber %4f  \n", st, d_ber[0][st]);
-        }
-
+        d_ber[0][0] = ber_calc1(d_00_st0, d_00_st1, TestBitsLen, input_symbols_buffer_I_ph, input_symbols_buffer_Q_ph);
         if (d_ber[0][0] < d_ber_threshold)
         {
-            d_phase = 0;
             d_shift = 0;
         }
-        /*        else if (d_ber[0][1] < d_ber_threshold)
-        {
-            d_phase = 1;
-            d_shift = 0;
-        }
-*/
         else
         {
             //second check BER of NO SHIFTed data for 0 and 90 degree rotation
-            for (unsigned char st = 0; st < 1; st++) //2
-            {
-                phase_move_two(st, TestBitsLen, input_symbols_buffer_I, input_symbols_buffer_Q, input_symbols_buffer_I_ph, input_symbols_buffer_Q_ph);
-                d_ber[1][st] = ber_calc1(d_00_st0, d_00_st1, TestBitsLen, input_symbols_buffer_I_ph + 1, input_symbols_buffer_Q_ph + 1);
-                // printf("Viterbi decoder : shifted PH%i:  d_ber %4f  \n", st, d_ber[1][st]);
-            }
+            d_ber[1][0] = ber_calc1(d_00_st0, d_00_st1, TestBitsLen, input_symbols_buffer_I_ph + 1, input_symbols_buffer_Q_ph + 1);
             if (d_ber[1][0] < d_ber_threshold)
             {
                 d_shift = 1;
-                d_phase = 0;
             }
-            /*            else if (d_ber[1][1] < d_ber_threshold)
-            {
-                d_phase = 1;
-                d_shift = 1;
-            }
-            //all ber >> threshold, wait for next data chunk      */
+            //all ber >> threshold, wait for next data chunk
             else
             {
                 d_valid_ber_found = false;
-                // printf("Viterbi decoder : ST_IDLE: NO VALID BER found,  waiting for next  paket of symbols\n");
             }
         }
 
         if (d_valid_ber_found == true)
         {
-            //printf("Viterbi decoder : ST_IDLE: switch to next state >> enter_syncED()\n");
-            //printf("Viterbi decoder : d_phase = %i, d_shift = %i\n", d_phase, d_shift);
             enter_synced();
             //data shift +1 determine - for main decoder
             if (d_shift == 0)
@@ -361,34 +291,28 @@ int FengyunViterbi::work(std::vector<std::complex<float>> &in_syms, size_t size,
 
     //ST_SYNCED check BER on incoming data if eneble, activate main decoder decode all incoming data
     case ST_SYNCED:
-        if (d_sync_check == true)
-        {
-            if (d_shift == 0)
-            {
-                phase_move_two(d_phase, TestBitsLen, input_symbols_buffer_I, input_symbols_buffer_Q, input_symbols_buffer_I_ph, input_symbols_buffer_Q_ph);
-                d_ber[0][0] = ber_calc1(d_00_st0, d_00_st1, TestBitsLen, input_symbols_buffer_I_ph, input_symbols_buffer_Q_ph);
-            }
-            else
-            {
-                phase_move_two(d_phase, TestBitsLen, input_symbols_buffer_I, input_symbols_buffer_Q, input_symbols_buffer_I_ph, input_symbols_buffer_Q_ph);
-                d_ber[0][0] = ber_calc1(d_00_st0, d_00_st1, TestBitsLen, input_symbols_buffer_I_ph + 1, input_symbols_buffer_Q_ph + 1);
-            }
 
-            if (d_ber[0][0] > d_ber_threshold)
+        if (d_shift == 0)
+        {
+            d_ber[0][0] = ber_calc1(d_00_st0, d_00_st1, TestBitsLen, input_symbols_buffer_I_ph, input_symbols_buffer_Q_ph);
+        }
+        else
+        {
+            d_ber[0][0] = ber_calc1(d_00_st0, d_00_st1, TestBitsLen, input_symbols_buffer_I_ph + 1, input_symbols_buffer_Q_ph + 1);
+        }
+
+        if (d_ber[0][0] > d_ber_threshold)
+        {
+            d_invalid_packet_count++;
+            if (d_invalid_packet_count > d_outsync_after)
             {
-                d_invalid_packet_count++;
-                // printf("Viterbi decoder : ST_SYNCED: Chunk Nr %i BER = %4f and exceed d_ber_threshold = %4f \n", d_invalid_packet_count, d_ber[0][0], d_ber_threshold);
-                if (d_invalid_packet_count > d_outsync_after)
-                {
-                    // printf("Viterbi decoder : ST_SYNCED: switch to ST_IDLE >> enter_idle()\n");
-                    enter_idle();
-                }
+                enter_idle();
             }
-            else
-            {
-                d_invalid_packet_count = 0;
-                d_viterbi_enable = true;
-            }
+        }
+        else
+        {
+            d_invalid_packet_count = 0;
+            d_viterbi_enable = true; //!!!
         }
 
         break;
@@ -427,14 +351,10 @@ int FengyunViterbi::work(std::vector<std::complex<float>> &in_syms, size_t size,
     // depuncturing is included
     if (d_viterbi_enable == true)
     {
-
-        phase_move_two(d_phase, ninputs, input_symbols_buffer_I, input_symbols_buffer_Q, input_symbols_buffer_I_ph, input_symbols_buffer_Q_ph);
-
         unsigned int out_byte_count = 0;
 
         for (unsigned int i = d_shift_main_decoder; i < ninputs; i++)
         {
-
             if ((d_sym_count % 2) == 0)
             { //0
                 d_even_symbol = true;
