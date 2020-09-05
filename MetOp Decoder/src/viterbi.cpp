@@ -75,7 +75,7 @@ void MetopViterbi::enter_synced()
 {
     d_state = ST_SYNCED;
     d_invalid_packet_count = 0;
-	d_viterbi_enable = true;
+    d_viterbi_enable = true;
 }
 
 //*****************************************************************************
@@ -343,36 +343,36 @@ int MetopViterbi::work(std::complex<float> *in_syms, size_t size, uint8_t *outpu
 
         break;
 
-    //ST_SYNCED check BER on incoming data if eneble, activate main decoder decode all incoming data
+    //ST_SYNCED check BER on incoming data if enable, activate main decoder decode all incoming data
     case ST_SYNCED:
-        
-		if (d_shift == 0)
-		{
-			phase_move_two(d_phase, TestBitsLen, input_symbols_buffer_I, input_symbols_buffer_Q, input_symbols_buffer_I_ph, input_symbols_buffer_Q_ph);
-			d_ber[0][0] = ber_calc1(d_00_st0, d_00_st1, TestBitsLen, input_symbols_buffer_I_ph, input_symbols_buffer_Q_ph);
-		}
-		else
-		{
-			phase_move_two(d_phase, TestBitsLen, input_symbols_buffer_I, input_symbols_buffer_Q, input_symbols_buffer_I_ph, input_symbols_buffer_Q_ph);
-			d_ber[0][0] = ber_calc1(d_00_st0, d_00_st1, TestBitsLen, input_symbols_buffer_I_ph + 1, input_symbols_buffer_Q_ph + 1);
-		}
 
-		if (d_ber[0][0] > d_ber_threshold)
-		{
-			d_invalid_packet_count++;
-			//printf("Viterbi decoder : ST_SYNCED: Chunk Nr %i BER = %4f and exceed d_ber_threshold = %4f \n", d_invalid_packet_count, d_ber[0][0], d_ber_threshold);
-			if (d_invalid_packet_count > d_outsync_after)
-			{
-				//printf("Viterbi decoder : ST_SYNCED: switch to ST_IDLE >> enter_idle()\n");
-				enter_idle();
-			}
-		}
-		else
-		{
-			d_invalid_packet_count = 0;
-			d_viterbi_enable = true;//!!!
-		}
-        
+        if (d_shift == 0)
+        {
+            phase_move_two(d_phase, TestBitsLen, input_symbols_buffer_I, input_symbols_buffer_Q, input_symbols_buffer_I_ph, input_symbols_buffer_Q_ph);
+            d_ber[0][0] = ber_calc1(d_00_st0, d_00_st1, TestBitsLen, input_symbols_buffer_I_ph, input_symbols_buffer_Q_ph);
+        }
+        else
+        {
+            phase_move_two(d_phase, TestBitsLen, input_symbols_buffer_I, input_symbols_buffer_Q, input_symbols_buffer_I_ph, input_symbols_buffer_Q_ph);
+            d_ber[0][0] = ber_calc1(d_00_st0, d_00_st1, TestBitsLen, input_symbols_buffer_I_ph + 1, input_symbols_buffer_Q_ph + 1);
+        }
+
+        if (d_ber[0][0] > d_ber_threshold)
+        {
+            d_invalid_packet_count++;
+            //printf("Viterbi decoder : ST_SYNCED: Chunk Nr %i BER = %4f and exceed d_ber_threshold = %4f \n", d_invalid_packet_count, d_ber[0][0], d_ber_threshold);
+            if (d_invalid_packet_count > d_outsync_after)
+            {
+                //printf("Viterbi decoder : ST_SYNCED: switch to ST_IDLE >> enter_idle()\n");
+                enter_idle();
+            }
+        }
+        else
+        {
+            d_invalid_packet_count = 0;
+            d_viterbi_enable = true; //!!!
+        }
+
         break;
 
     default:
@@ -484,12 +484,10 @@ int MetopViterbi::work(std::complex<float> *in_syms, size_t size, uint8_t *outpu
             d_even_symbol = false;
         }
 
-        //consume_each(ninputs);
         return (out_byte_count);
     }
     else
     {
-        //consume_each(ninputs);
         return (0);
     }
 }

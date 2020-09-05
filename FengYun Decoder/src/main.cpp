@@ -13,8 +13,6 @@
 #include "viterbi.h"
 #include "diff.h"
 
-
-
 // Processing buffer size
 #define BUFFER_SIZE (8192 * 5)
 
@@ -35,47 +33,52 @@ size_t getFilesize(std::string filepath)
 }
 
 int main(int argc, char *argv[])
-{	
-	if (argc < 3)
+{
+    // Print out command syntax
+    if (argc < 3)
     {
-		std::cout << "Usage : " << argv[0] << " -b -v 0.165 -o 5 inputfile.bin outputframes.bin" << std::endl;
-		std::cout << "		    -b (decode the FY3A,B sat.)" << std::endl;
-		std::cout << "		    -c (decode the FY3C,D? sat.)" << std::endl;
-		std::cout << "		    -v (viterbi treshold(default: 0.170))" << std::endl;
-		std::cout << "		    -o (outsinc after decode frame number(default: 5))" << std::endl;
-		std::cout << "2020-08-15." << std::endl;
+        std::cout << "Usage : " << argv[0] << " -b -v 0.165 -o 5 inputfile.bin outputframes.bin" << std::endl;
+        std::cout << "		    -b (decode the FY3A,B sat.)" << std::endl;
+        std::cout << "		    -c (decode the FY3C,D? sat.)" << std::endl;
+        std::cout << "		    -v (viterbi treshold(default: 0.170))" << std::endl;
+        std::cout << "		    -o (outsinc after decode frame number(default: 5))" << std::endl;
+        std::cout << "2020-08-15." << std::endl;
         return 1;
     }
-	int outsinc = 5;
-	float vittres = 0.170;
-	int fy3c = 0;
-	int sw = 0;
-	while ((sw = getopt (argc, argv, "bco:v:")) != -1)
-    switch (sw)
-      {
-      case 'b':
-        fy3c = 0;
-        break;
-      case 'c':
-        fy3c = 1;
-        break;
-	  case 'o':
-        outsinc = std::atof(optarg);
-        break;
-	  case 'v':
-        vittres = std::atof(optarg);
-        break;
-      default:
-        break;
-      }
-    
+
+    // Variables
+    int viterbi_outsync_after = 5;
+    float viterbi_ber_threasold = 0.170;
+    int fy3c_mode = 0;
+    int sw = 0;
+
+    while ((sw = getopt(argc, argv, "bco:v:")) != -1)
+    {
+        switch (sw)
+        {
+        case 'b':
+            fy3c_mode = 0;
+            break;
+        case 'c':
+            fy3c_mode = 1;
+            break;
+        case 'o':
+            viterbi_outsync_after = std::atof(optarg);
+            break;
+        case 'v':
+            viterbi_ber_threasold = std::atof(optarg);
+            break;
+        default:
+            break;
+        }
+    }
 
     // Output and Input file
     std::ifstream data_in(argv[argc - 2], std::ios::binary);
     std::ofstream data_out(argv[argc - 1], std::ios::binary);
 
     // Our 2 Viterbi decoders and differential decoder
-    FengyunViterbi viterbi1(true, vittres, 1, outsinc, 50), viterbi2(true, vittres, 1, outsinc, 50);
+    FengyunViterbi viterbi1(true, viterbi_ber_threasold, 1, viterbi_outsync_after, 50), viterbi2(true, viterbi_ber_threasold, 1, viterbi_outsync_after, 50);
     FengyunDiff diff;
 
     // Viterbi output buffer
@@ -102,9 +105,9 @@ int main(int argc, char *argv[])
     std::cout << "FengYun Decoder by Aang23" << std::endl;
     std::cout << "Fixed by Tomi HA6NAB" << std::endl;
     std::cout << "---------------------------" << std::endl;
-	std::cout << "Viterbi treshold: "<< vittres << std::endl;
-	std::cout << "Outsinc after: "<< outsinc << std::endl;
-	std::cout << "---------------------------" << std::endl;
+    std::cout << "Viterbi threshold: " << viterbi_ber_threasold << std::endl;
+    std::cout << "Outsinc after: " << viterbi_outsync_after << std::endl;
+    std::cout << "---------------------------" << std::endl;
     std::cout << std::endl;
 
     int shift = 0;
@@ -123,14 +126,14 @@ int main(int argc, char *argv[])
             std::complex<float> iS = buffer[i * 2 + shift].imag() + buffer[i * 2 + 1 + shift].imag() * 1if;
             std::complex<float> qS = buffer[i * 2 + shift].real() + buffer[i * 2 + 1 + shift].real() * 1if;
             iSamples->push_back(iS);
-			if(fy3c)
-			{
-				qSamples->push_back(-qS);//FY3C
-			}
-			else
-			{
-				qSamples->push_back(qS);// FY3B
-			}
+            if (fy3c_mode)
+            {
+                qSamples->push_back(-qS); //FY3C
+            }
+            else
+            {
+                qSamples->push_back(qS); // FY3B
+            }
         }
         // Run Viterbi!
         int v1 = viterbi1.work(*qSamples, qSamples->size(), viterbi1_out);
@@ -174,14 +177,14 @@ int main(int argc, char *argv[])
                 std::complex<float> iS = buffer[i * 2 + shift].imag() + buffer[i * 2 + 1 + shift].imag() * 1if;
                 std::complex<float> qS = buffer[i * 2 + shift].real() + buffer[i * 2 + 1 + shift].real() * 1if;
                 iSamples->push_back(iS);
-                if(fy3c)
-				{
-					qSamples->push_back(-qS);//FY3C
-				}
-				else
-				{
-					qSamples->push_back(qS);// FY3B
-				}
+                if (fy3c_mode)
+                {
+                    qSamples->push_back(-qS); //FY3C
+                }
+                else
+                {
+                    qSamples->push_back(qS); // FY3B
+                }
             }
             // Run Viterbi!
             int v1 = viterbi1.work(*qSamples, qSamples->size(), viterbi1_out);

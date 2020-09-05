@@ -77,7 +77,7 @@ void FengyunViterbi::enter_synced()
 {
     d_state = ST_SYNCED;
     d_invalid_packet_count = 0;
-	d_viterbi_enable = true;
+    d_viterbi_enable = true;
 }
 
 //*****************************************************************************
@@ -238,7 +238,7 @@ int FengyunViterbi::work(std::vector<std::complex<float>> &in_syms, size_t size,
     //ST_IDLE is waiting for valid BER measured on incoming data
     case ST_IDLE:
         //first check BER of NO SHIFTed data for 0 and 90 degree rotation
-        d_valid_ber_found = true;      
+        d_valid_ber_found = true;
         d_ber[0][0] = ber_calc1(d_00_st0, d_00_st1, TestBitsLen, input_symbols_buffer_I_ph, input_symbols_buffer_Q_ph);
         if (d_ber[0][0] < d_ber_threshold)
         {
@@ -291,30 +291,29 @@ int FengyunViterbi::work(std::vector<std::complex<float>> &in_syms, size_t size,
 
     //ST_SYNCED check BER on incoming data if eneble, activate main decoder decode all incoming data
     case ST_SYNCED:
-        
-		if (d_shift == 0)
-		{
-			d_ber[0][0] = ber_calc1(d_00_st0, d_00_st1, TestBitsLen, input_symbols_buffer_I_ph, input_symbols_buffer_Q_ph);
-		}
-		else
-		{
-			d_ber[0][0] = ber_calc1(d_00_st0, d_00_st1, TestBitsLen, input_symbols_buffer_I_ph + 1, input_symbols_buffer_Q_ph + 1);
-		}
 
-		if (d_ber[0][0] > d_ber_threshold)
-		{
-			d_invalid_packet_count++;
-			if (d_invalid_packet_count > d_outsync_after)
-			{
-				enter_idle();
-			}
-		}
-		else
-		{
-			d_invalid_packet_count = 0;
-			d_viterbi_enable = true;//!!!
-		}
-        
+        if (d_shift == 0)
+        {
+            d_ber[0][0] = ber_calc1(d_00_st0, d_00_st1, TestBitsLen, input_symbols_buffer_I_ph, input_symbols_buffer_Q_ph);
+        }
+        else
+        {
+            d_ber[0][0] = ber_calc1(d_00_st0, d_00_st1, TestBitsLen, input_symbols_buffer_I_ph + 1, input_symbols_buffer_Q_ph + 1);
+        }
+
+        if (d_ber[0][0] > d_ber_threshold)
+        {
+            d_invalid_packet_count++;
+            if (d_invalid_packet_count > d_outsync_after)
+            {
+                enter_idle();
+            }
+        }
+        else
+        {
+            d_invalid_packet_count = 0;
+            d_viterbi_enable = true; //!!!
+        }
 
         break;
 
