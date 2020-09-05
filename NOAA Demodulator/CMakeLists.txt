@@ -11,3 +11,5 @@ target_link_libraries(NOAA-Demodulator PUBLIC m)
 
 find_package(Threads REQUIRED)
 target_link_libraries(NOAA-Demodulator PUBLIC Threads::Threads)
+
+install(TARGETS NOAA-Demodulator DESTINATION bin)

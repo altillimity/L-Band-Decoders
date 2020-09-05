@@ -11,3 +11,5 @@ target_link_libraries(METEOR-Demodulator PUBLIC m)
 
 find_package(Threads REQUIRED)
 target_link_libraries(METEOR-Demodulator PUBLIC Threads::Threads)
+
+install(TARGETS METEOR-Demodulator DESTINATION bin)

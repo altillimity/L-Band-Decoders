@@ -18,3 +18,5 @@ else()
     find_package(PNG REQUIRED)
 endif()
 target_link_libraries(METEOR-MSU-MR-Decoder PUBLIC PNG::PNG)
+
+install(TARGETS METEOR-MSU-MR-Decoder DESTINATION bin)

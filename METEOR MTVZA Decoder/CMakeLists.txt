@@ -18,3 +18,5 @@ else()
     find_package(PNG REQUIRED)
 endif()
 target_link_libraries(METEOR-MTVZA-Decoder PUBLIC PNG::PNG)
+
+install(TARGETS METEOR-MTVZA-Decoder DESTINATION bin)

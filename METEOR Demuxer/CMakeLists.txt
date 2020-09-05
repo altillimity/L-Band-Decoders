@@ -11,3 +11,5 @@ target_link_libraries(METEOR-Demux PUBLIC m)
 
 find_package(Threads REQUIRED)
 target_link_libraries(METEOR-Demux PUBLIC Threads::Threads)
+
+install(TARGETS METEOR-Demux DESTINATION bin)

@@ -9,3 +9,5 @@ add_executable(QPSK-Demodulator ${QPSK-Demodulator_CPPS})
 
 target_include_directories(QPSK-Demodulator PUBLIC src)
 target_link_libraries(QPSK-Demodulator PUBLIC m)
+
+install(TARGETS QPSK-Demodulator DESTINATION bin)

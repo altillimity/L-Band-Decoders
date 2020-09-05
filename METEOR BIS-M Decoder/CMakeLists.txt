@@ -11,3 +11,5 @@ target_link_libraries(METEOR-BIS-M-Decoder PUBLIC m)
 
 find_package(Threads REQUIRED)
 target_link_libraries(METEOR-BIS-M-Decoder PUBLIC Threads::Threads)
+
+install(TARGETS METEOR-BIS-M-Decoder DESTINATION bin)

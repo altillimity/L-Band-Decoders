@@ -18,3 +18,5 @@ else()
     find_package(PNG REQUIRED)
 endif()
 target_link_libraries(MetOp-AVHRR-Decoder PUBLIC PNG::PNG)
+
+install(TARGETS MetOp-AVHRR-Decoder DESTINATION bin)

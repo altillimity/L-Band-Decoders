@@ -18,3 +18,5 @@ else()
     find_package(PNG REQUIRED)
 endif()
 target_link_libraries(FengYun-VIRR-Decoder PUBLIC PNG::PNG)
+
+install(TARGETS FengYun-VIRR-Decoder DESTINATION bin)
