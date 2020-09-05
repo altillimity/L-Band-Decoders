@@ -99,13 +99,13 @@ int main(int argc, char *argv[])
     std::ofstream data_out(valueOutput.getValue(), std::ios::binary);
 
     // Buffer mess
-    std::complex<float> buffer[BUFFER_SIZE];
-    std::complex<float> agc_buff[BUFFER_SIZE];
-    std::complex<float> rrc_buff[BUFFER_SIZE];
-    float pll_buff[BUFFER_SIZE];
-    float moving_buff[BUFFER_SIZE];
-    float recovered_buff[BUFFER_SIZE];
-    uint8_t bitsBuffer[BUFFER_SIZE];
+    std::complex<float> *buffer = new std::complex<float>[BUFFER_SIZE];
+    std::complex<float> *agc_buff = new std::complex<float>[BUFFER_SIZE];
+    std::complex<float> *rrc_buff = new std::complex<float>[BUFFER_SIZE];
+    float *pll_buff = new float[BUFFER_SIZE];
+    float *moving_buff = new float[BUFFER_SIZE];
+    float *recovered_buff = new float[BUFFER_SIZE];
+    uint8_t *bitsBuffer = new uint8_t[BUFFER_SIZE];
     std::vector<std::complex<float>> clockRecoIn;
     std::vector<std::complex<float>> clockRecoOut;
     std::vector<uint16_t> frames;
@@ -120,10 +120,10 @@ int main(int argc, char *argv[])
     ClockRecovery clockReco = ClockRecovery(((float)valueSamplerate.getValue() / SYMBOL_RATE) / 2.0f, pow(40e-3, 2) / 4.0f, 1.0f, 40e-3f, 0.01f);
 
     // Int16 buffer
-    int16_t buffer_i16[BUFFER_SIZE * 2];
+    int16_t *buffer_i16 = new int16_t[BUFFER_SIZE * 2];
 
     // Int8 buffer
-    int8_t buffer_i8[BUFFER_SIZE * 2];
+    int8_t *buffer_i8 = new int8_t[BUFFER_SIZE * 2];
 
     uint8_t byteToWrite;
     int inByteToWrite;

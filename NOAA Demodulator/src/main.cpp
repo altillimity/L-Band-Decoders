@@ -99,12 +99,12 @@ int main(int argc, char *argv[])
     std::ofstream data_out(valueOutput.getValue(), std::ios::binary);
 
     // Buffer mess
-    std::complex<float> buffer[BUFFER_SIZE];
-    std::complex<float> agc_buff[BUFFER_SIZE];
-    float pll_buff[BUFFER_SIZE];
-    float moving_buff[BUFFER_SIZE];
-    float recovered_buff[BUFFER_SIZE];
-    uint8_t bitsBuffer[BUFFER_SIZE];
+    std::complex<float> *buffer = new std::complex<float>[BUFFER_SIZE];
+    std::complex<float> *agc_buff = new std::complex<float>[BUFFER_SIZE];
+    float *pll_buff = new float[BUFFER_SIZE];
+    float *moving_buff = new float[BUFFER_SIZE];
+    float *recovered_buff = new float[BUFFER_SIZE];
+    uint8_t *bitsBuffer = new uint8_t[BUFFER_SIZE];
     std::vector<std::complex<float>> clockRecoIn;
     std::vector<std::complex<float>> clockRecoOut;
     std::vector<uint16_t> frames;
@@ -112,16 +112,16 @@ int main(int argc, char *argv[])
     int frame_count = 0;
 
     Agc agc = Agc(AGC_WINSIZE, 0.5 / 32768.0, 1.0);
-    PLL pll = PLL(0.01f, pow(0.01, 2) / 4.0, 3.0f * M_PI * 100e3f / (float) valueSamplerate.getValue());
-    MovingAverage movingAverage = MovingAverage(round(((float) valueSamplerate.getValue() / SYMBOL_RATE) / 4.0f), 1.0f / 4.0, BUFFER_SIZE, 1);
-    ClockRecovery clockReco = ClockRecovery(((float) valueSamplerate.getValue() / SYMBOL_RATE) / 2.0f, pow(0.01, 2) / 4.0, 0.5f, 0.01f, 100e-6f);
+    PLL pll = PLL(0.01f, pow(0.01, 2) / 4.0, 3.0f * M_PI * 100e3f / (float)valueSamplerate.getValue());
+    MovingAverage movingAverage = MovingAverage(round(((float)valueSamplerate.getValue() / SYMBOL_RATE) / 4.0f), 1.0f / 4.0, BUFFER_SIZE, 1);
+    ClockRecovery clockReco = ClockRecovery(((float)valueSamplerate.getValue() / SYMBOL_RATE) / 2.0f, pow(0.01, 2) / 4.0, 0.5f, 0.01f, 100e-6f);
     NOAADeframer deframer;
 
     // Int16 buffer
-    int16_t buffer_i16[BUFFER_SIZE * 2];
+    int16_t *buffer_i16 = new int16_t[BUFFER_SIZE * 2];
 
     // Int8 buffer
-    int8_t buffer_i8[BUFFER_SIZE * 2];
+    int8_t *buffer_i8 = new int8_t[BUFFER_SIZE * 2];
 
     while (!data_in.eof())
     {

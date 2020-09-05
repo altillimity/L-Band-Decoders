@@ -85,13 +85,16 @@ int main(int argc, char *argv[])
     ClockRecovery clockreco(valueSamplerate.getValue(), valueSymbolrate.getValue());
 
     // All buffers we use along the way
-    std::complex<float> buffer[BUFFER_SIZE], agc_buffer[BUFFER_SIZE], filter_buffer[BUFFER_SIZE], recovery_buffer[BUFFER_SIZE];
+    std::complex<float> *buffer = new std::complex<float>[BUFFER_SIZE],
+                        *agc_buffer = new std::complex<float>[BUFFER_SIZE],
+                        *filter_buffer = new std::complex<float>[BUFFER_SIZE],
+                        *recovery_buffer = new std::complex<float>[BUFFER_SIZE];
 
     // Int16 buffer
-    int16_t buffer_i16[BUFFER_SIZE * 2];
+    int16_t *buffer_i16 = new int16_t[BUFFER_SIZE * 2];
 
     // Int8 buffer
-    int8_t buffer_i8[BUFFER_SIZE * 2];
+    int8_t *buffer_i8 = new int8_t[BUFFER_SIZE * 2];
 
     while (!data_in.eof())
     {
