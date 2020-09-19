@@ -24,6 +24,8 @@ int main(int argc, char *argv[])
     TCLAP::SwitchArg valueFengYun("f", "fengyun", "FengYun imager deframing");
     TCLAP::SwitchArg valueAddHeader("m", "marker", "Add sync marker (1ACFFC1D) for easy syncing");
     TCLAP::SwitchArg valueFrameLength("l", "framelength", "Show found frame length");
+    TCLAP::SwitchArg valueDerandomize("d", "derand", "Derandomize CADU frames ");
+    TCLAP::SwitchArg valueReedSolomon("r", "reedsolomon", "Use reed-solomon correction");
 
     // Register all of the above options
     cmd.add(valueInput);
@@ -34,6 +36,8 @@ int main(int argc, char *argv[])
     cmd.add(valueFengYun);
     cmd.add(valueAddHeader);
     cmd.add(valueFrameLength);
+    cmd.add(valueDerandomize);
+    cmd.add(valueReedSolomon);
 
     // Parse
     try
@@ -53,7 +57,7 @@ int main(int argc, char *argv[])
     // Read buffer
     uint8_t buffer[8192];
 
-    CADUDeframer deframer;                                                                // CADU Deframer
+    CADUDeframer deframer(valueDerandomize.getValue());                                   // CADU Deframer
     CADUReedSolomon reedSolomon;                                                          // RS correction
     CCSDSFramer framer(valueVcid.getValue(), valueApid.getValue(), valueSize.getValue()); // CCSDS Framer
 
@@ -76,18 +80,21 @@ int main(int argc, char *argv[])
         // Print status out
         if (deframer.getState() == 0)
             std::cout << "\rNOSYNC  " << std::flush;
-        else if (deframer.getState() == 1)
+        else if (deframer.getState() == 2 | deframer.getState() == 6)
             std::cout << "\rSYNCING " << std::flush;
-        else if (deframer.getState() == 2)
+        else if (deframer.getState() > 6)
             std::cout << "\rSYNCED  " << std::flush;
 
         // If we got frames in this batch, error-correct them! RS discard corrupted frames
-        if (frameBuffer.size() > 0)
-            correctedFrameBuffer = reedSolomon.work(frameBuffer, rsfail);
+        if (valueReedSolomon.getValue())
+            if (frameBuffer.size() > 0)
+                correctedFrameBuffer = reedSolomon.work(frameBuffer, rsfail);
 
         // If RS didn't say this batch was garbage, (eg, frames remains), push it into the CCSDS framer
-        if (correctedFrameBuffer.size() > 0)
+        if (correctedFrameBuffer.size() > 0 && valueReedSolomon.getValue())
             ccsdsFrames = framer.work(correctedFrameBuffer);
+        else if (frameBuffer.size() > 0)
+            ccsdsFrames = framer.work(frameBuffer);
 
         // Count CCSDS frames
         if (!valueFengYun.getValue())

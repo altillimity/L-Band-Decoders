@@ -30,9 +30,11 @@ private:
     std::array<uint8_t, CADU_SIZE> frameBuffer;
     // Found frame count
     int numFrames;
+    // Should we derand?
+    bool derand_m;
 
 public:
-    CADUDeframer();
+    CADUDeframer(bool derand);
     // Get found frame count
     int getFrameCount();
     // Return state

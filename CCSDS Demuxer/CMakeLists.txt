@@ -13,3 +13,5 @@ target_link_libraries (CCSDS-Demux PUBLIC "fec")
 
 find_package(Threads REQUIRED)
 target_link_libraries(CCSDS-Demux PUBLIC Threads::Threads)
+
+install(TARGETS CCSDS-Demux DESTINATION bin)

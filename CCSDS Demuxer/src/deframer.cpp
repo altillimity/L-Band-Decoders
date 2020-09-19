@@ -28,7 +28,7 @@ int checkSyncMarker(uint32_t &marker, uint32_t totest)
     return errors;
 }
 
-CADUDeframer::CADUDeframer()
+CADUDeframer::CADUDeframer(bool derand) : derand_m(derand)
 {
     // From gr-poes-weather (including comments!)
     unsigned char feedbk, randm = 0xff;
@@ -117,7 +117,10 @@ std::vector<std::array<uint8_t, CADU_SIZE>> CADUDeframer::work(uint8_t *input, s
                 if (--wroteBits == 0)
                 {
                     // Derandomization
-                    frameBuffer[wroteBytes] = outBuffer ^ d_rantab[wroteBytes];
+                    if (derand_m)
+                        frameBuffer[wroteBytes] = outBuffer ^ d_rantab[wroteBytes];
+                    else
+                        frameBuffer[wroteBytes] = outBuffer;
                     wroteBytes++;
                     wroteBits = 8;
                 }
