@@ -56,8 +56,8 @@ int main(int argc, char *argv[])
     uint16_t buffer[BUFFER_SIZE / 2];
     //AIP frame count
     int totalAIPFrames = 0;
-    //image buffer (I din't want to use a dynamic array, because of the complicated format of MHS)
-    unsigned short *imageBuffer = new unsigned short[500 * 90];
+    //image data
+    std::vector<unsigned short> imagebuffer;
     //line vount
     int line = 0;
 
@@ -110,7 +110,8 @@ int main(int argc, char *argv[])
 
                     for (int j = 0; j < 540; j += 6)
                     {
-                        imageBuffer[90 * line + j / 6] = MHSWord[j + channel + 49];
+                        //idk why I needed to add +49 there, but doesn't work without it
+                        imagebuffer.push_back(MHSWord[j + channel + 49]);
                     }
                     line = line + 1;
                 }
@@ -143,7 +144,8 @@ int main(int argc, char *argv[])
 
                     for (int j = 0; j < 540; j += 6)
                     {
-                        imageBuffer[90 * line + j / 6] = MHSWord[j + channel + 49];
+                        //idk why I needed to add +49 there, but doesn't work without it
+                        imagebuffer.push_back(MHSWord[j + channel + 49]);
                     }
 
                     line = line + 1;
@@ -179,7 +181,8 @@ int main(int argc, char *argv[])
 
                     for (int j = 0; j < 540; j += 6)
                     {
-                        imageBuffer[90 * line + j / 6] = MHSWord[j + channel + 49];
+                        //idk why I needed to add +49 there, but doesn't work without it
+                        imagebuffer.push_back(MHSWord[j + channel + 49]);
                     }
 
                     line = line + 1;
@@ -201,13 +204,6 @@ int main(int argc, char *argv[])
     std::cout<<"Found "<<line<<" MHS lines."<<std::endl;
     std::cout<<std::endl;
 
-    //transfer the data from the big image buffer to a second one, which is the size that the image will be
-    unsigned short imagebuffer[(line + 1) * 90];
-    for (int i = 0; i < (line + 1) * 90; i++)
-    {
-        imagebuffer[i] = imageBuffer[i];
-    }
-    delete[] imageBuffer;
     //create an image
     cimg_library::CImg<unsigned short> outputImage(&imagebuffer[0], 90, line + 1);
     //save the image
