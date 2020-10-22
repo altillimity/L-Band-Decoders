@@ -225,7 +225,40 @@ blocks:
     coordinate: [252.0, 176]
     rotation: 90
     state: enabled
-- name: blocks_file_sink_1
+- name: analog_rail_ff_0
+  id: analog_rail_ff
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    hi: '1'
+    lo: '-1'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [894, 290]
+    rotation: 90
+    state: enabled
+- name: blocks_complex_to_float_1
+  id: blocks_complex_to_float
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [765, 272]
+    rotation: 270
+    state: enabled
+- name: blocks_file_sink_0_0_0
   id: blocks_file_sink
   parameters:
     affinity: ''
@@ -233,16 +266,16 @@ blocks:
     append: 'False'
     comment: ''
     file: ''
-    type: complex
+    type: byte
     unbuffered: 'False'
     vlen: '1'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [552, 444.0]
-    rotation: 180
-    state: true
+    coordinate: [1020, 400]
+    rotation: 0
+    state: enabled
 - name: blocks_file_source_0
   id: blocks_file_source
   parameters:
@@ -265,6 +298,42 @@ blocks:
     coordinate: [80, 524]
     rotation: 0
     state: true
+- name: blocks_float_to_char_0
+  id: blocks_float_to_char
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    scale: '127'
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [957, 296]
+    rotation: 270
+    state: enabled
+- name: blocks_interleave_0
+  id: blocks_interleave
+  parameters:
+    affinity: ''
+    alias: ''
+    blocksize: '1'
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    num_streams: '2'
+    type: float
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [831, 388]
+    rotation: 0
+    state: enabled
 - name: blocks_throttle_0_0_1_0
   id: blocks_throttle
   parameters:
@@ -1109,9 +1178,14 @@ blocks:
 connections:
 - [analog_agc_xx_0_0, '0', qtgui_freq_sink_x_1, '0']
 - [analog_agc_xx_0_0, '0', root_raised_cosine_filter_0, '0']
+- [analog_rail_ff_0, '0', blocks_float_to_char_0, '0']
+- [blocks_complex_to_float_1, '0', blocks_interleave_0, '1']
+- [blocks_complex_to_float_1, '1', blocks_interleave_0, '0']
 - [blocks_file_source_0, '0', blocks_throttle_0_0_1_0, '0']
+- [blocks_float_to_char_0, '0', blocks_file_sink_0_0_0, '0']
+- [blocks_interleave_0, '0', analog_rail_ff_0, '0']
 - [blocks_throttle_0_0_1_0, '0', virtual_sink_0_0, '0']
-- [digital_clock_recovery_mm_xx_0, '0', blocks_file_sink_1, '0']
+- [digital_clock_recovery_mm_xx_0, '0', blocks_complex_to_float_1, '0']
 - [digital_clock_recovery_mm_xx_0, '0', qtgui_const_sink_x_0, '0']
 - [digital_cma_equalizer_cc_0, '0', digital_costas_loop_cc_0, '0']
 - [digital_costas_loop_cc_0, '0', digital_clock_recovery_mm_xx_0, '0']
