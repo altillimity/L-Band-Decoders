@@ -13,6 +13,8 @@
 #include "viterbi.h"
 #include "diff.h"
 
+#include "ctpl/ctpl_stl.h"
+
 // Processing buffer size
 #define BUFFER_SIZE (8192 * 5)
 
@@ -42,17 +44,25 @@ int main(int argc, char *argv[])
         std::cout << "		    -c (decode the FY3C,D? sat.)" << std::endl;
         std::cout << "		    -v (viterbi treshold(default: 0.170))" << std::endl;
         std::cout << "		    -o (outsinc after decode frame number(default: 5))" << std::endl;
+        std::cout << "		    -s (enable soft symbols input (faster))" << std::endl;
         std::cout << "2020-08-15." << std::endl;
         return 1;
     }
+
+    // Multithreading stuff
+    ctpl::thread_pool viterbi_pool(2);
+    std::future<void> v1_fut, v2_fut;
+
+    int v1, v2;
 
     // Variables
     int viterbi_outsync_after = 5;
     float viterbi_ber_threasold = 0.170;
     int fy3c_mode = 0;
     int sw = 0;
+    bool softSymbols = false;
 
-    while ((sw = getopt(argc, argv, "bco:v:")) != -1)
+    while ((sw = getopt(argc, argv, "bcos:v:")) != -1)
     {
         switch (sw)
         {
@@ -67,6 +77,9 @@ int main(int argc, char *argv[])
             break;
         case 'v':
             viterbi_ber_threasold = std::atof(optarg);
+            break;
+        case 's':
+            softSymbols = true;
             break;
         default:
             break;
@@ -91,6 +104,7 @@ int main(int argc, char *argv[])
 
     // Read buffer
     std::complex<float> buffer[BUFFER_SIZE];
+    int8_t *soft_buffer = new int8_t[BUFFER_SIZE * 2];
 
     // Diff decoder input and output
     std::vector<uint8_t> *diff_in = new std::vector<uint8_t>, *diff_out = new std::vector<uint8_t>;
@@ -117,7 +131,21 @@ int main(int argc, char *argv[])
     {
 
         // Read a buffer
-        data_in.read((char *)buffer, sizeof(std::complex<float>) * BUFFER_SIZE);
+        if (softSymbols)
+        {
+            data_in.read((char *)soft_buffer, BUFFER_SIZE * 2);
+
+            // Convert to hard symbols from soft symbols. We may want to work with soft only later?
+            for (int i = 0; i < BUFFER_SIZE; i++)
+            {
+                using namespace std::complex_literals;
+                buffer[i] = ((float)soft_buffer[i * 2 + 1] / 127.0f) + ((float)soft_buffer[i * 2] / 127.0f) * 1if;
+            }
+        }
+        else
+        {
+            data_in.read((char *)buffer, sizeof(std::complex<float>) * BUFFER_SIZE);
+        }
 
         // Deinterleave I & Q for the 2 Viterbis
         for (int i = 0; i < BUFFER_SIZE / 2; i++)
@@ -136,8 +164,10 @@ int main(int argc, char *argv[])
             }
         }
         // Run Viterbi!
-        int v1 = viterbi1.work(*qSamples, qSamples->size(), viterbi1_out);
-        int v2 = viterbi2.work(*iSamples, iSamples->size(), viterbi2_out);
+        v1_fut = viterbi_pool.push([&](int) { v1 = viterbi1.work(*qSamples, qSamples->size(), viterbi1_out); });
+        v2_fut = viterbi_pool.push([&](int) { v2 = viterbi2.work(*iSamples, iSamples->size(), viterbi2_out); });
+        v1_fut.get();
+        v2_fut.get();
 
         // Interleave and pack output into 2 bits chunks
         if (v1 > 0 || v2 > 0)
@@ -187,8 +217,10 @@ int main(int argc, char *argv[])
                 }
             }
             // Run Viterbi!
-            int v1 = viterbi1.work(*qSamples, qSamples->size(), viterbi1_out);
-            int v2 = viterbi2.work(*iSamples, iSamples->size(), viterbi2_out);
+            v1_fut = viterbi_pool.push([&](int) { v1 = viterbi1.work(*qSamples, qSamples->size(), viterbi1_out); });
+            v2_fut = viterbi_pool.push([&](int) { v2 = viterbi2.work(*iSamples, iSamples->size(), viterbi2_out); });
+            v1_fut.get();
+            v2_fut.get();
 
             // Interleave and pack output into 2 bits chunks
             if (v1 > 0 || v2 > 0)
