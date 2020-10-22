@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
         std::cout << "		    -c (decode the FY3C,D? sat.)" << std::endl;
         std::cout << "		    -v (viterbi treshold(default: 0.170))" << std::endl;
         std::cout << "		    -o (outsinc after decode frame number(default: 5))" << std::endl;
-        std::cout << "		    -s (enable soft symbols input (faster))" << std::endl;
+        std::cout << "		    -h (enable hard symbols input (slower))" << std::endl;
         std::cout << "2020-08-15." << std::endl;
         return 1;
     }
@@ -60,9 +60,9 @@ int main(int argc, char *argv[])
     float viterbi_ber_threasold = 0.170;
     int fy3c_mode = 0;
     int sw = 0;
-    bool softSymbols = false;
+    bool softSymbols = true;
 
-    while ((sw = getopt(argc, argv, "bcos:v:")) != -1)
+    while ((sw = getopt(argc, argv, "bcoh:v:")) != -1)
     {
         switch (sw)
         {
@@ -78,8 +78,8 @@ int main(int argc, char *argv[])
         case 'v':
             viterbi_ber_threasold = std::atof(optarg);
             break;
-        case 's':
-            softSymbols = true;
+        case 'h':
+            softSymbols = false;
             break;
         default:
             break;

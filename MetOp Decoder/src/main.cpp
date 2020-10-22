@@ -30,6 +30,7 @@ int main(int argc, char *argv[])
         std::cout << "Usage : " << argv[0] << " -v 0.165 -o 5 inputfile.raw outputframes.bin" << std::endl;
         std::cout << "		    -o (outsinc after decode frame number(default: 5))" << std::endl;
         std::cout << "		    -v (viterbi treshold(default: 0.170))" << std::endl;
+        std::cout << "		    -h (enable hard symbols input (slower))" << std::endl;
         std::cout << "2020-08-15." << std::endl;
         return 1;
     }
@@ -38,8 +39,9 @@ int main(int argc, char *argv[])
     int viterbi_outsync_after = 5;
     float viterbi_ber_threasold = 0.170;
     int sw = 0;
+    bool softSymbols = true;
 
-    while ((sw = getopt(argc, argv, "o:v:")) != -1)
+    while ((sw = getopt(argc, argv, "oh:v:")) != -1)
     {
         switch (sw)
         {
@@ -48,6 +50,9 @@ int main(int argc, char *argv[])
             break;
         case 'v':
             viterbi_ber_threasold = std::atof(optarg);
+            break;
+        case 'h':
+            softSymbols = false;
             break;
         default:
             break;
@@ -66,6 +71,7 @@ int main(int argc, char *argv[])
 
     // Read buffer
     std::complex<float> buffer[BUFFER_SIZE];
+    int8_t *soft_buffer = new int8_t[BUFFER_SIZE * 2];
 
     // Complete filesize
     size_t filesize = getFilesize(argv[argc - 2]);
@@ -86,8 +92,22 @@ int main(int argc, char *argv[])
     // Read until EOF
     while (!data_in.eof())
     {
-        // Read buffer
-        data_in.read((char *)buffer, sizeof(std::complex<float>) * BUFFER_SIZE);
+        // Read a buffer
+        if (softSymbols)
+        {
+            data_in.read((char *)soft_buffer, BUFFER_SIZE * 2);
+
+            // Convert to hard symbols from soft symbols. We may want to work with soft only later?
+            for (int i = 0; i < BUFFER_SIZE; i++)
+            {
+                using namespace std::complex_literals;
+                buffer[i] = ((float)soft_buffer[i * 2 + 1] / 127.0f) + ((float)soft_buffer[i * 2] / 127.0f) * 1if;
+            }
+        }
+        else
+        {
+            data_in.read((char *)buffer, sizeof(std::complex<float>) * BUFFER_SIZE);
+        }
 
         // Push into Viterbi
         int num_samp = viterbi.work(buffer, BUFFER_SIZE, viterbi_out);
