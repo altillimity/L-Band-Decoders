@@ -66,6 +66,7 @@ std::vector<std::vector<uint8_t>> VIRRDeframer::work(std::vector<uint8_t> &data)
                 // New ASM, ABORT! and process the new one
                 if (shifter == ASM_SYNC)
                 {
+                    // Fill up what we're missing
                     for (int b = 0; b < 208400 - outputBits; b++)
                         pushBit(0);
 
