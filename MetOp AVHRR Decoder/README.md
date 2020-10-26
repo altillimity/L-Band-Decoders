@@ -1,5 +1,5 @@
 # MetOp AVHRR Decoder
 
-This program takes AVHRR frames from the CCSDS Demuxer and makes an image... Very basic for now! Only outputs rgb composite...
+This program takes synced derandomized CADUs from the CADU RSynchroderand and outputs all channels + a few composites.
 
-Usage : `./MetOp-AVHRR-Decoder avhrrframes.bin output.png`
+Usage : `./MetOp-AVHRR-Decoder cadu.bin`
