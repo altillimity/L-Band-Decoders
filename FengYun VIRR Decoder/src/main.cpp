@@ -2,19 +2,16 @@
 #include <fstream>
 #include <complex>
 #include <vector>
+#include "virr_deframer.h"
+#include "virr_reader.h"
 
-#define cimg_use_png
-#define cimg_display 0
-#include "CImg.h"
-
-// Processing buffer size
-#define BUFFER_SIZE (26050)
-
-// Returns the asked bit!
-template <typename T>
-inline bool getBit(T &data, int &bit)
+// Return filesize
+size_t getFilesize(std::string filepath)
 {
-    return (data >> bit) & 1;
+    std::ifstream file(filepath, std::ios::binary | std::ios::ate);
+    std::size_t fileSize = file.tellg();
+    file.close();
+    return fileSize;
 }
 
 int main(int argc, char *argv[])
@@ -23,78 +20,168 @@ int main(int argc, char *argv[])
     std::ifstream data_in(argv[1], std::ios::binary);
 
     // Read buffer
-    uint8_t *buffer = new uint8_t[BUFFER_SIZE];
+    uint8_t *buffer = new uint8_t[1024];
 
-    // VIRR Packet buffer
-    uint16_t *virrBuffer = new uint16_t[204800];
+    // Deframer
+    VIRRDeframer virrDefra;
 
-    // Frame counter
-    int frame = 0;
+    VIRRReader reader;
 
-    // This will need some fixes
-    uint16_t *imageBufferR = new uint16_t[10000 * 2048];
-    uint16_t *imageBufferG = new uint16_t[10000 * 2048];
-    uint16_t *imageBufferB = new uint16_t[10000 * 2048];
+    // Graphics
+    std::cout << "---------------------------" << std::endl;
+    std::cout << "     FengYun-3 (A/B/C)" << std::endl;
+    std::cout << "  VIRR Decoder by Aang23" << std::endl;
+    std::cout << "---------------------------" << std::endl;
+    std::cout << std::endl;
+
+    std::cout << "Demultiplexing and deframing..." << std::endl;
+
+    int vcidFrames = 0, virr_frames = 0;
 
     // Read until EOF
     while (!data_in.eof())
     {
+        if (argc != 2)
+        {
+            std::cout << "Usage : " << argv[0] << " inputFrames.bin" << std::endl;
+            return 0;
+        }
+
+        // Complete filesize
+        size_t filesize = getFilesize(argv[1]);
+
         // Read buffer
-        data_in.read((char *)buffer, BUFFER_SIZE);
+        data_in.read((char *)buffer, 1024);
 
-        int pos = 424; // VIRR Data position, found through a bit viewer
+        // Extract VCID
+        int vcid = buffer[5] % ((int)pow(2, 6));
 
-        // Convert into 10-bits values
-        for (int i = 0; i < 20480; i += 4)
+        if (vcid == 5)
         {
-            virrBuffer[i] = (buffer[pos + 0] << 2) | (buffer[pos + 1] >> 6);
-            virrBuffer[i + 1] = ((buffer[pos + 1] % 64) << 4) | (buffer[pos + 2] >> 4);
-            virrBuffer[i + 2] = ((buffer[pos + 2] % 16) << 6) | (buffer[pos + 3] >> 2);
-            virrBuffer[i + 3] = ((buffer[pos + 3] % 4) << 8) | buffer[pos + 4];
-            pos += 5;
+            vcidFrames++;
+
+            // Deframe MERSI
+            std::vector<uint8_t> defraVec;
+            defraVec.insert(defraVec.end(), &buffer[14], &buffer[14 + 882]);
+            std::vector<std::vector<uint8_t>> out = virrDefra.work(defraVec);
+
+            for (std::vector<uint8_t> frameVec : out)
+            {
+                virr_frames++;
+                reader.work(frameVec);
+            }
         }
 
-        // Channel R
-        for (int i = 0; i < 2048; i++)
-        {
-            uint16_t pixel = virrBuffer[8 + i * 10];
-            imageBufferR[frame * 2048 + i] = pixel * 60;
-        }
-
-        // Channel G
-        for (int i = 0; i < 2048; i++)
-        {
-            uint16_t pixel = virrBuffer[0 + i * 10];
-            imageBufferG[frame * 2048 + i] = pixel * 60;
-        }
-
-        // Channel B
-        for (int i = 0; i < 2048; i++)
-        {
-            uint16_t pixel = virrBuffer[6 + i * 10];
-            imageBufferB[frame * 2048 + i] = pixel * 60;
-        }
-
-        // Frame counter
-        frame++;
+        // Show our progress
+        std::cout << "\rProgress : " << round(((float)data_in.tellg() / (float)filesize) * 1000.0f) / 10.0f << "%     " << std::flush;
     }
 
-    // Print it all out into a .png
-    cimg_library::CImg<uint16_t> finalImage(2048, frame, 1, 3);
+    std::cout << std::endl;
+    std::cout << std::endl;
 
-    cimg_library::CImg<uint16_t> channelImageR(&imageBufferR[0], 2048, frame);
-    cimg_library::CImg<uint16_t> channelImageG(&imageBufferG[0], 2048, frame);
-    cimg_library::CImg<uint16_t> channelImageB(&imageBufferB[0], 2048, frame);
+    // Say what we found
+    std::cout << "VCID 5 Frames         : " << vcidFrames << std::endl;
+    std::cout << "VIRR Frames           : " << virr_frames << std::endl;
+    std::cout << "VIRR Lines            : " << reader.lines << std::endl;
 
-    channelImageR.equalize(1000);
-    channelImageG.equalize(1000);
-    channelImageB.equalize(1000);
+    std::cout << std::endl;
 
-    finalImage.draw_image(0, 0, 0, 0, channelImageR);
-    finalImage.draw_image(0, 0, 0, 1, channelImageG);
-    finalImage.draw_image(0, 0, 0, 2, channelImageB);
+    // Write images out
+    std::cout << "Writing images... (Can take a while)" << std::endl;
 
-    finalImage.save_png(argv[2]);
+    cimg_library::CImg<unsigned short> image1 = reader.getChannel(0);
+    cimg_library::CImg<unsigned short> image2 = reader.getChannel(1);
+    cimg_library::CImg<unsigned short> image3 = reader.getChannel(2);
+    cimg_library::CImg<unsigned short> image4 = reader.getChannel(3);
+    cimg_library::CImg<unsigned short> image5 = reader.getChannel(4);
+    cimg_library::CImg<unsigned short> image6 = reader.getChannel(5);
+    cimg_library::CImg<unsigned short> image7 = reader.getChannel(6);
+    cimg_library::CImg<unsigned short> image8 = reader.getChannel(7);
+    cimg_library::CImg<unsigned short> image9 = reader.getChannel(8);
+    cimg_library::CImg<unsigned short> image10 = reader.getChannel(9);
+
+    // Takes a while so we say how we're doing
+    std::cout << "Channel 1..." << std::endl;
+    image1.save_png("VIRR-1.png");
+
+    std::cout << "Channel 2..." << std::endl;
+    image2.save_png("VIRR-2.png");
+
+    std::cout << "Channel 3..." << std::endl;
+    image3.save_png("VIRR-3.png");
+
+    std::cout << "Channel 4..." << std::endl;
+    image4.save_png("VIRR-4.png");
+
+    std::cout << "Channel 5..." << std::endl;
+    image5.save_png("VIRR-5.png");
+
+    std::cout << "Channel 6..." << std::endl;
+    image6.save_png("VIRR-6.png");
+
+    std::cout << "Channel 7..." << std::endl;
+    image7.save_png("VIRR-7.png");
+
+    std::cout << "Channel 8..." << std::endl;
+    image8.save_png("VIRR-8.png");
+
+    std::cout << "Channel 9..." << std::endl;
+    image9.save_png("VIRR-9.png");
+
+    std::cout << "Channel 10..." << std::endl;
+    image10.save_png("VIRR-10.png");
+
+    std::cout << "221 Composite..." << std::endl;
+    cimg_library::CImg<unsigned short> image221(2048, reader.lines, 1, 3);
+    {
+        image221.draw_image(0, 0, 0, 0, image2);
+        image221.draw_image(0, 0, 0, 1, image2);
+        image221.draw_image(0, 0, 0, 2, image1);
+        image221.equalize(1000);
+        image221.normalize(0, std::numeric_limits<unsigned char>::max());
+    }
+    image221.save_png("VIRR-RGB-221.png");
+
+    std::cout << "321 Composite..." << std::endl;
+    cimg_library::CImg<unsigned short> image621(2048, reader.lines, 1, 3);
+    {
+        image621.draw_image(2, 1, 0, 0, image6);
+        image621.draw_image(0, 0, 0, 1, image2);
+        image621.draw_image(0, 0, 0, 2, image1);
+        image621.equalize(1000);
+        image621.normalize(0, std::numeric_limits<unsigned char>::max());
+    }
+    image621.save_png("VIRR-RGB-621.png");
+
+    std::cout << "197 Composite..." << std::endl;
+    cimg_library::CImg<unsigned short> image197(2048, reader.lines, 1, 3);
+    {
+        cimg_library::CImg<unsigned short> tempImage9 = image9, tempImage1 = image1, tempImage7 = image7;
+        tempImage9.equalize(1000);
+        tempImage1.equalize(1000);
+        tempImage7.equalize(1000);
+        image197.draw_image(1, 0, 0, 0, tempImage1);
+        image197.draw_image(0, 0, 0, 1, tempImage9);
+        image197.draw_image(-2, 0, 0, 2, tempImage7);
+        image197.equalize(1000);
+        image197.normalize(0, std::numeric_limits<unsigned char>::max());
+    }
+    image197.save_png("VIRR-RGB-197.png");
+
+    std::cout << "917 Composite..." << std::endl;
+    cimg_library::CImg<unsigned short> image917(2048, reader.lines, 1, 3);
+    {
+        cimg_library::CImg<unsigned short> tempImage9 = image9, tempImage1 = image1, tempImage7 = image7;
+        tempImage9.equalize(1000);
+        tempImage1.equalize(1000);
+        tempImage7.equalize(1000);
+        image917.draw_image(0, 0, 0, 0, tempImage9);
+        image917.draw_image(1, 0, 0, 1, tempImage1);
+        image917.draw_image(-1, 0, 0, 2, tempImage7);
+        image917.equalize(1000);
+        image917.normalize(0, std::numeric_limits<unsigned char>::max());
+    }
+    image917.save_png("VIRR-RGB-917.png");
 
     data_in.close();
 }
