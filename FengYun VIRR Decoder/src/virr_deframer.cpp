@@ -1,8 +1,8 @@
 #include "virr_deframer.h"
 
 #include <math.h>
-#include <iostream>
-#include <bitset>
+//#include <iostream>
+//#include <bitset>
 
 #define ASM_SYNC 0b101000010001011011111101011100011001110110000011110010010101
 
@@ -47,7 +47,7 @@ std::vector<std::vector<uint8_t>> VIRRDeframer::work(std::vector<uint8_t> &data)
             // Get a bit, push it
             uint8_t bit = getBit<uint8_t>(byte, i);
 
-            shifter = ((shifter << 1 | bit) % (long)pow(2, 60));
+            shifter = ((shifter << 1 | bit) % 1152921504606846976); // 2^60
 
             // Writing a frame!
             if (writeFrame)
