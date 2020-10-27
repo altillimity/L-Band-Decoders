@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
         // Extract VCID
         int vcid = buffer[5] % ((int)pow(2, 6));
 
-        if (vcid == 5)
+        if (vcid == 5 || vcid == 9)
         {
             vcidFrames++;
 
