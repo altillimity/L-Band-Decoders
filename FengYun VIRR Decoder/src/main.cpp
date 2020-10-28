@@ -4,6 +4,7 @@
 #include <vector>
 #include "virr_deframer.h"
 #include "virr_reader.h"
+#include "xfr.h"
 
 // Return filesize
 size_t getFilesize(std::string filepath)
@@ -143,7 +144,7 @@ int main(int argc, char *argv[])
     }
     image221.save_png("VIRR-RGB-221.png");
 
-    std::cout << "321 Composite..." << std::endl;
+    std::cout << "621 Composite..." << std::endl;
     cimg_library::CImg<unsigned short> image621(2048, reader.lines, 1, 3);
     {
         image621.draw_image(2, 1, 0, 0, image6);
@@ -184,79 +185,20 @@ int main(int argc, char *argv[])
     }
     image917.save_png("VIRR-RGB-917.png");
 
-    std::cout << "197 xfr Composite..." << std::endl;
-    cimg_library::CImg<unsigned short> image197xfr(2048, reader.lines, 1, 3);
+    std::cout << "197 True Color XFR Composite... (by ZbychuButItWasTaken)" << std::endl;
+    cimg_library::CImg<unsigned short> image197truecolorxfr(2048, reader.lines, 1, 3);
     {
-        float R[3] = {26, 663, 1 / 1.65};
-        float G[3] = {34, 999, 1 / 1.62};
-        float B[3] = {47, 829, 1 / 1.65};
-
-        int red_lut[1024], green_lut[1024], blue_lut[1024];
-
         cimg_library::CImg<unsigned short> tempImage1 = image1, tempImage9 = image9, tempImage7 = image7;
 
-        for (int i = 0; i < 1024; i++)
-        {
-            if (i < R[0])
-            {
-                red_lut[i] = 0;
-            }
-            else if (i > R[1])
-            {
-                red_lut[i] = 1023;
-            }
-            else
-            {
-                red_lut[i] = ((powf((i - R[0]) / (R[1] - R[0]), R[2]) * (R[1] - R[0])) + R[0]) * 1023 / R[1];
-            }
+        XFR trueColor(26, 663, 165, 34, 999, 162, 47, 829, 165);
 
-            if (i < G[0])
-            {
-                green_lut[i] = 0;
-            }
-            else if (i > G[1])
-            {
-                green_lut[i] = 1023;
-            }
-            else
-            {
-                green_lut[i] = ((powf((i - G[0]) / (G[1] - G[0]), G[2]) * (G[1] - G[0])) + G[0]) * 1023 / G[1];
-            }
+        applyXFR(trueColor, tempImage1, tempImage9, tempImage7);
 
-            if (i < B[0])
-            {
-                blue_lut[i] = 0;
-            }
-            else if (i > B[1])
-            {
-                blue_lut[i] = 1023;
-            }
-            else
-            {
-                blue_lut[i] = ((powf((i - B[0]) / (B[1] - B[0]), B[2]) * (B[1] - B[0])) + B[0]) * 1023 / B[1];
-            }
-        }
-
-        for (int i = 0; i < tempImage1.height() * tempImage1.width(); i++)
-        {
-            unsigned short &current = tempImage1.data()[i];
-            current = current / 60;
-            current = red_lut[current] * 60;
-
-            unsigned short &current1 = tempImage9.data()[i];
-            current1 = current1 / 60;
-            current1 = green_lut[current1] * 60;
-
-            unsigned short &current2 = tempImage7.data()[i];
-            current2 = current2 / 60;
-            current2 = blue_lut[current2] * 60;
-        }
-
-        image197xfr.draw_image(1, 0, 0, 0, tempImage1);
-        image197xfr.draw_image(0, 0, 0, 1, tempImage9);
-        image197xfr.draw_image(-2, 0, 0, 2, tempImage7);
+        image197truecolorxfr.draw_image(1, 0, 0, 0, tempImage1);
+        image197truecolorxfr.draw_image(0, 0, 0, 1, tempImage9);
+        image197truecolorxfr.draw_image(-2, 0, 0, 2, tempImage7);
     }
-    image197xfr.save_png("VIRR-RGB-197-xfr.png");
+    image197truecolorxfr.save_png("VIRR-RGB-197-TRUECOLOR.png");
 
     data_in.close();
 }
