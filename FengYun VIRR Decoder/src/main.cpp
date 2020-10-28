@@ -187,9 +187,9 @@ int main(int argc, char *argv[])
     std::cout << "197 xfr Composite..." << std::endl;
     cimg_library::CImg<unsigned short> image197xfr(2048, reader.lines, 1, 3);
     {
-        float R[3] = {23, 610, 1 / 1.53};
+        float R[3] = {26, 663, 1 / 1.65};
         float G[3] = {34, 999, 1 / 1.62};
-        float B[3] = {39, 829, 1 / 1.65};
+        float B[3] = {47, 829, 1 / 1.65};
 
         int red_lut[1024], green_lut[1024], blue_lut[1024];
 
