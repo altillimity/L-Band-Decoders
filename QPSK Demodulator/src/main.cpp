@@ -37,6 +37,7 @@ int main(int argc, char *argv[])
     TCLAP::SwitchArg valueF32Baseband("f", "float32", "Input baseband as float32");
     TCLAP::SwitchArg valueInt16Baseband("6", "int16", "Input baseband as int16");
     TCLAP::SwitchArg valueInt8Baseband("8", "int8", "Input baseband as int8");
+    TCLAP::SwitchArg valueWav8Baseband("e", "wav8", "Input baseband as wav8");
 
     // Register all of the above options
     cmd.add(valueInput);
@@ -46,6 +47,7 @@ int main(int argc, char *argv[])
     cmd.add(valueF32Baseband);
     cmd.add(valueInt16Baseband);
     cmd.add(valueInt8Baseband);
+    cmd.add(valueWav8Baseband);
 
     // Parse
     try
@@ -59,12 +61,12 @@ int main(int argc, char *argv[])
     }
 
     // Just in case
-    if (!(valueF32Baseband.getValue() || valueInt16Baseband.getValue() || valueInt8Baseband.getValue()))
+    if (!(valueF32Baseband.getValue() || valueInt16Baseband.getValue() || valueInt8Baseband.getValue() || valueWav8Baseband.getValue()))
     {
         std::cout << "Please specify baseband format! -f, -6, -8" << std::endl;
         return 1;
     }
-    else if ((valueF32Baseband.getValue() + valueInt16Baseband.getValue() + valueInt8Baseband.getValue()) > 1)
+    else if ((valueF32Baseband.getValue() + valueInt16Baseband.getValue() + valueInt8Baseband.getValue() + valueWav8Baseband.getValue()) > 1)
     {
         std::cout << "Please specify only one baseband format! -f, -6, -8" << std::endl;
         return 1;
@@ -96,6 +98,9 @@ int main(int argc, char *argv[])
     // Int8 buffer
     int8_t *buffer_i8 = new int8_t[BUFFER_SIZE * 2];
 
+    // Uint8 buffer
+    uint8_t *buffer_u8 = new uint8_t[BUFFER_SIZE * 2];
+
     while (!data_in.eof())
     {
         // Get baseband, possibly convert to F32
@@ -119,6 +124,17 @@ int main(int argc, char *argv[])
             {
                 using namespace std::complex_literals;
                 buffer[i] = (float)buffer_i8[i * 2] + (float)buffer_i8[i * 2 + 1] * 1if;
+            }
+        }
+        else if (valueWav8Baseband.getValue())
+        {
+            data_in.read((char *)buffer_u8, BUFFER_SIZE * sizeof(uint8_t) * 2);
+            for (int i = 0; i < BUFFER_SIZE; i++)
+            {
+                float imag = (buffer_u8[i * 2] - 127) * 0.004f;
+                float real = (buffer_u8[i * 2 + 1] - 127) * 0.004f;
+                using namespace std::complex_literals;
+                buffer[i] = real + imag * 1if;
             }
         }
 
