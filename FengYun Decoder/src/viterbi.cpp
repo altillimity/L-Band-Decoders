@@ -195,7 +195,7 @@ float FengyunViterbi::ber_calc1(
 //    VITERBI DECODER, GENERAL WORK FUNCTION
 //
 //*****************************************************************************
-int FengyunViterbi::work(std::vector<std::complex<float>> &in_syms, size_t size, uint8_t *output)
+int FengyunViterbi::work(std::complex<float> *in_syms, size_t size, uint8_t *output)
 {
     unsigned char *out = &output[0];
     int ninputs = size;

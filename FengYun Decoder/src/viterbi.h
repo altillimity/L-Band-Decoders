@@ -1,5 +1,4 @@
 #include <complex>
-#include <vector>
 
 #define TestBitsLen 1024
 
@@ -56,5 +55,5 @@ public:
 
     unsigned char &getState();
 
-    int work(std::vector<std::complex<float>> &in, size_t size, uint8_t *output);
+    int work(std::complex<float> *in, size_t size, uint8_t *output);
 };
