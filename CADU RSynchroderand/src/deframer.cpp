@@ -1,7 +1,7 @@
 #include "deframer.h"
 
 // Definitely still needs tuning
-#define THRESOLD_STATE_3 22
+#define THRESOLD_STATE_3 12
 #define THRESOLD_STATE_2 2
 #define THRESOLD_STATE_1 6
 #define THRESOLD_STATE_0 0

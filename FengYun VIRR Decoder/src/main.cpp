@@ -200,5 +200,20 @@ int main(int argc, char *argv[])
     }
     image197truecolorxfr.save_png("VIRR-RGB-197-TRUECOLOR.png");
 
+    std::cout << "197 Night XFR Composite... (by ZbychuButItWasTaken)" << std::endl;
+    cimg_library::CImg<unsigned short> image197nightxfr(2048, reader.lines, 1, 3);
+    {
+        cimg_library::CImg<unsigned short> tempImage1 = image1, tempImage9 = image9, tempImage7 = image7;
+
+        XFR trueColor(23, 610, 153, 34, 999, 162, 39, 829, 165);
+
+        applyXFR(trueColor, tempImage1, tempImage9, tempImage7);
+
+        image197nightxfr.draw_image(1, 0, 0, 0, tempImage1);
+        image197nightxfr.draw_image(0, 0, 0, 1, tempImage9);
+        image197nightxfr.draw_image(-2, 0, 0, 2, tempImage7);
+    }
+    image197nightxfr.save_png("VIRR-RGB-197-NIGHT.png");
+
     data_in.close();
 }
