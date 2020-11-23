@@ -22,7 +22,7 @@ The flowcharts require GNU Radio 3.8 or above.
 **Decoding :**
 - Record a baseband 
 - Demodulate with the FY Demodulator flowchart
-- Process the soft symbols with FengYun Decoder   
+- Process the soft symbols with FengYun Decoder (use 3b mode for 3c, seems like the coding was changed)   
 - Use that file in MetFy3x or run it through the CADU RSynchroderand to continue  
 - Run the resulting CADU file through the FengYun VIRR Decoder  
 
