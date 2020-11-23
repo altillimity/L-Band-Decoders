@@ -75,6 +75,14 @@
         "variant": "cpp",
         "any": "cpp",
         "codecvt": "cpp",
-        "future": "cpp"
+        "future": "cpp",
+        "csetjmp": "cpp",
+        "charconv": "cpp",
+        "cuchar": "cpp",
+        "regex": "cpp",
+        "numbers": "cpp",
+        "scoped_allocator": "cpp",
+        "shared_mutex": "cpp",
+        "span": "cpp"
     }
 }

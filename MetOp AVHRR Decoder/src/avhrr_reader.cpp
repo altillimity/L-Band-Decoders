@@ -4,6 +4,7 @@ AVHRRReader::AVHRRReader()
 {
     for (int i = 0; i < 5; i++)
         channels[i] = new unsigned short[5000 * 2048];
+    lines = 0;
 }
 
 void AVHRRReader::work(libccsds::CCSDSPacket &packet)
@@ -14,7 +15,7 @@ void AVHRRReader::work(libccsds::CCSDSPacket &packet)
     int pos = 14; // AVHRR Data, eg, User Data Field
 
     // Convert into 10-bits values
-    for (int i = 0; i < 12944; i += 4)
+    for (int i = 0; i < 2048 * 6; i += 4)
     {
         avhrrBuffer[i] = (packet.payload[pos + 0] << 2) | (packet.payload[pos + 1] >> 6);
         avhrrBuffer[i + 1] = ((packet.payload[pos + 1] % 64) << 4) | (packet.payload[pos + 2] >> 4);
