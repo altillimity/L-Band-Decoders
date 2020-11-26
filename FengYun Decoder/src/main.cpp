@@ -169,18 +169,19 @@ int main(int argc, char *argv[])
         }
 
         // Run Viterbi!
-        v1_fut = viterbi_pool.push([&](int) { v1 = viterbi1.work(qSamples, BUFFER_SIZE / 2, viterbi1_out); });
-        v2_fut = viterbi_pool.push([&](int) { v2 = viterbi2.work(iSamples, BUFFER_SIZE / 2, viterbi2_out); });
+        v1_fut = viterbi_pool.push([&](int) { v1 = viterbi1.work(qSamples, inQ, viterbi1_out); });
+        v2_fut = viterbi_pool.push([&](int) { v2 = viterbi2.work(iSamples, inI, viterbi2_out); });
         v1_fut.get();
         v2_fut.get();
+
+        diffin = 0;
 
         // Interleave and pack output into 2 bits chunks
         if (v1 > 0 || v2 > 0)
         {
-            if (v1 == v2 && v1 > 0)
+            if (v1 == v2)
             {
                 uint8_t bit1, bit2, bitCb;
-                diffin = 0;
                 for (int y = 0; y < v1; y++)
                 {
                     for (int i = 7; i >= 0; i--)
@@ -223,18 +224,19 @@ int main(int argc, char *argv[])
                 }
             }
             // Run Viterbi!
-            v1_fut = viterbi_pool.push([&](int) { v1 = viterbi1.work(qSamples, BUFFER_SIZE / 2, viterbi1_out); });
-            v2_fut = viterbi_pool.push([&](int) { v2 = viterbi2.work(iSamples, BUFFER_SIZE / 2, viterbi2_out); });
+            v1_fut = viterbi_pool.push([&](int) { v1 = viterbi1.work(qSamples, inQ, viterbi1_out); });
+            v2_fut = viterbi_pool.push([&](int) { v2 = viterbi2.work(iSamples, inI, viterbi2_out); });
             v1_fut.get();
             v2_fut.get();
+
+            diffin = 0;
 
             // Interleave and pack output into 2 bits chunks
             if (v1 > 0 || v2 > 0)
             {
-                if (v1 == v2 && v1 > 0)
+                if (v1 == v2)
                 {
                     uint8_t bit1, bit2, bitCb;
-                    diffin = 0;
                     for (int y = 0; y < v1; y++)
                     {
                         for (int i = 7; i >= 0; i--)
@@ -272,7 +274,11 @@ int main(int argc, char *argv[])
         data_out_total += diffin / 4;
 
         // Console stuff
-        std::cout << '\r' << "Viterbi 1 : " << (viterbi1.getState() == 0 ? "NO SYNC" : viterbi1.getState() == 1 ? "SYNCING" : "SYNCED") << ", Viterbi 2 : " << (viterbi2.getState() == 0 ? "NO SYNC" : viterbi2.getState() == 1 ? "SYNCING" : "SYNCED") << ", Data out : " << round(data_out_total / 1e5) / 10.0f << " MB, Progress : " << round(((float)data_in.tellg() / (float)filesize) * 1000.0f) / 10.0f << "%     " << std::flush;
+        std::cout << '\r' << "Viterbi 1 : " << (viterbi1.getState() == 0 ? "NO SYNC" : viterbi1.getState() == 1 ? "SYNCING"
+                                                                                                                : "SYNCED")
+                  << ", Viterbi 2 : " << (viterbi2.getState() == 0 ? "NO SYNC" : viterbi2.getState() == 1 ? "SYNCING"
+                                                                                                          : "SYNCED")
+                  << ", Data out : " << round(data_out_total / 1e5) / 10.0f << " MB, Progress : " << round(((float)data_in.tellg() / (float)filesize) * 1000.0f) / 10.0f << "%     " << std::flush;
     }
 
     std::cout << std::endl
