@@ -152,7 +152,17 @@ std::vector<std::array<uint8_t, CADU_SIZE>> CADUDeframer::work(uint8_t *input, s
                     numFrames++;
                     writeFrame = true;
                     state = THRESOLD_STATE_1;
-                    //skip = 1024 * 8;
+                    bit_inversion = false;
+                    errors = 0;
+                    sep_errors = 0;
+                    good = 0;
+                }
+                else if (shifter == CADU_ASM_INV)
+                {
+                    numFrames++;
+                    writeFrame = true;
+                    state = THRESOLD_STATE_1;
+                    bit_inversion = true;
                     errors = 0;
                     sep_errors = 0;
                     good = 0;
