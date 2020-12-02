@@ -19,4 +19,7 @@ else()
 endif()
 target_link_libraries(MetOp-IASI-Decoder PUBLIC PNG::PNG)
 
+find_library(CCSDS_LIBRARY ccsds REQUIRED)
+target_link_libraries(MetOp-IASI-Decoder PUBLIC ${CCSDS_LIBRARY})
+
 install(TARGETS MetOp-IASI-Decoder DESTINATION bin)
