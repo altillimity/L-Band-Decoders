@@ -2,7 +2,6 @@ cmake_minimum_required (VERSION 3.0.0)
 
 include_directories(common_headers)
 
-add_subdirectory("CCSDS Demuxer")
 add_subdirectory("FengYun Decoder")
 add_subdirectory("FengYun VIRR Decoder")
 add_subdirectory("METEOR BIS-M Decoder")
