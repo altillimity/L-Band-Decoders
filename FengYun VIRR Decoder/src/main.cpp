@@ -139,10 +139,11 @@ int main(int argc, char *argv[])
         image221.draw_image(0, 0, 0, 0, image2);
         image221.draw_image(0, 0, 0, 1, image2);
         image221.draw_image(0, 0, 0, 2, image1);
-        image221.equalize(1000);
-        image221.normalize(0, std::numeric_limits<unsigned char>::max());
     }
     image221.save_png("VIRR-RGB-221.png");
+    image221.equalize(1000);
+    image221.normalize(0, std::numeric_limits<unsigned char>::max());
+    image221.save_png("VIRR-RGB-221-EQU.png");
 
     std::cout << "621 Composite..." << std::endl;
     cimg_library::CImg<unsigned short> image621(2048, reader.lines, 1, 3);
@@ -150,40 +151,55 @@ int main(int argc, char *argv[])
         image621.draw_image(2, 1, 0, 0, image6);
         image621.draw_image(0, 0, 0, 1, image2);
         image621.draw_image(0, 0, 0, 2, image1);
-        image621.equalize(1000);
-        image621.normalize(0, std::numeric_limits<unsigned char>::max());
     }
     image621.save_png("VIRR-RGB-621.png");
+    image621.equalize(1000);
+    image621.normalize(0, std::numeric_limits<unsigned char>::max());
+    image621.save_png("VIRR-RGB-621-EQU.png");
 
     std::cout << "197 Composite..." << std::endl;
     cimg_library::CImg<unsigned short> image197(2048, reader.lines, 1, 3);
     {
-        cimg_library::CImg<unsigned short> tempImage9 = image9, tempImage1 = image1, tempImage7 = image7;
-        tempImage9.equalize(1000);
-        tempImage1.equalize(1000);
-        tempImage7.equalize(1000);
-        image197.draw_image(1, 0, 0, 0, tempImage1);
-        image197.draw_image(0, 0, 0, 1, tempImage9);
-        image197.draw_image(-2, 0, 0, 2, tempImage7);
-        image197.equalize(1000);
-        image197.normalize(0, std::numeric_limits<unsigned char>::max());
+        image197.draw_image(1, 0, 0, 0, image1);
+        image197.draw_image(0, 0, 0, 1, image9);
+        image197.draw_image(-2, 0, 0, 2, image7);
     }
     image197.save_png("VIRR-RGB-197.png");
-
-    std::cout << "917 Composite..." << std::endl;
-    cimg_library::CImg<unsigned short> image917(2048, reader.lines, 1, 3);
+    cimg_library::CImg<unsigned short> image197equ(2048, reader.lines, 1, 3);
     {
         cimg_library::CImg<unsigned short> tempImage9 = image9, tempImage1 = image1, tempImage7 = image7;
         tempImage9.equalize(1000);
         tempImage1.equalize(1000);
         tempImage7.equalize(1000);
-        image917.draw_image(0, 0, 0, 0, tempImage9);
-        image917.draw_image(1, 0, 0, 1, tempImage1);
-        image917.draw_image(-1, 0, 0, 2, tempImage7);
-        image917.equalize(1000);
-        image917.normalize(0, std::numeric_limits<unsigned char>::max());
+        image197equ.draw_image(1, 0, 0, 0, tempImage1);
+        image197equ.draw_image(0, 0, 0, 1, tempImage9);
+        image197equ.draw_image(-2, 0, 0, 2, tempImage7);
+        image197equ.equalize(1000);
+        image197equ.normalize(0, std::numeric_limits<unsigned char>::max());
+    }
+    image197equ.save_png("VIRR-RGB-197-EQU.png");
+
+    std::cout << "917 Composite..." << std::endl;
+    cimg_library::CImg<unsigned short> image917(2048, reader.lines, 1, 3);
+    {
+        image917.draw_image(0, 0, 0, 0, image9);
+        image917.draw_image(1, 0, 0, 1, image1);
+        image917.draw_image(-1, 0, 0, 2, image7);
     }
     image917.save_png("VIRR-RGB-917.png");
+    cimg_library::CImg<unsigned short> image917equ(2048, reader.lines, 1, 3);
+    {
+        cimg_library::CImg<unsigned short> tempImage9 = image9, tempImage1 = image1, tempImage7 = image7;
+        tempImage9.equalize(1000);
+        tempImage1.equalize(1000);
+        tempImage7.equalize(1000);
+        image917equ.draw_image(0, 0, 0, 0, tempImage9);
+        image917equ.draw_image(1, 0, 0, 1, tempImage1);
+        image917equ.draw_image(-1, 0, 0, 2, tempImage7);
+        image917equ.equalize(1000);
+        image917equ.normalize(0, std::numeric_limits<unsigned char>::max());
+    }
+    image917equ.save_png("VIRR-RGB-917-EQU.png");
 
     std::cout << "197 True Color XFR Composite... (by ZbychuButItWasTaken)" << std::endl;
     cimg_library::CImg<unsigned short> image197truecolorxfr(2048, reader.lines, 1, 3);

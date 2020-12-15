@@ -93,10 +93,11 @@ int main(int argc, char *argv[])
         image221.draw_image(0, 0, 0, 0, image2);
         image221.draw_image(0, 0, 0, 1, image2);
         image221.draw_image(0, 0, 0, 2, image1);
-        image221.equalize(1000);
-        image221.normalize(0, std::numeric_limits<unsigned char>::max());
     }
     image221.save_png("AVHRR-RGB-221.png");
+    image221.equalize(1000);
+    image221.normalize(0, std::numeric_limits<unsigned char>::max());
+    image221.save_png("AVHRR-RGB-221-EQU.png");
 
     data_in.close();
 }

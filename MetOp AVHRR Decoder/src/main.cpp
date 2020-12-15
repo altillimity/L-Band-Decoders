@@ -126,10 +126,11 @@ int main(int argc, char *argv[])
         image221.draw_image(0, 0, 0, 0, image2);
         image221.draw_image(0, 0, 0, 1, image2);
         image221.draw_image(0, 0, 0, 2, image1);
-        image221.equalize(1000);
-        image221.normalize(0, std::numeric_limits<unsigned char>::max());
     }
     image221.save_png("AVHRR-RGB-221.png");
+    image221.equalize(1000);
+    image221.normalize(0, std::numeric_limits<unsigned char>::max());
+    image221.save_png("AVHRR-RGB-221-EQU.png");
 
     std::cout << "321 Composite..." << std::endl;
     cimg_library::CImg<unsigned short> image321(2048, reader.lines, 1, 3);
@@ -137,10 +138,11 @@ int main(int argc, char *argv[])
         image321.draw_image(0, 0, 0, 0, image3);
         image321.draw_image(0, 0, 0, 1, image2);
         image321.draw_image(0, 0, 0, 2, image1);
-        image321.equalize(1000);
-        image321.normalize(0, std::numeric_limits<unsigned char>::max());
     }
     image321.save_png("AVHRR-RGB-321.png");
+    image321.equalize(1000);
+    image321.normalize(0, std::numeric_limits<unsigned char>::max());
+    image321.save_png("AVHRR-RGB-321-EQU.png");
 
     data_in.close();
 }
