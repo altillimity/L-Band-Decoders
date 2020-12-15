@@ -3,111 +3,118 @@
 #include <complex>
 #include <vector>
 
-#define cimg_use_png
-#define cimg_display 0
-#include "CImg.h"
+#include "msumr_reader.h"
 
-// Processing buffer size
-#define BUFFER_SIZE (11850)
-
-// Returns the asked bit!
-template <typename T>
-inline bool getBit(T &data, int &bit)
+// Return filesize
+size_t getFilesize(std::string filepath)
 {
-    return (data >> bit) & 1;
+    std::ifstream file(filepath, std::ios::binary | std::ios::ate);
+    std::size_t fileSize = file.tellg();
+    file.close();
+    return fileSize;
 }
+
+// IO files
+std::ifstream data_in;
 
 int main(int argc, char *argv[])
 {
-    // Output and Input file
-    std::ifstream data_in(argv[1], std::ios::binary);
+    if (argc != 2)
+    {
+        std::cout << "Usage: " << argv[0] << " inputFrames.bin" << std::endl;
+        return 0;
+    }
 
     // Read buffer
-    uint8_t buffer[BUFFER_SIZE];
+    uint8_t buffer[11850];
 
-    // AVHRR Packet buffer
-    uint16_t msumrBuffer[6][1572];
+    // Complete filesize
+    size_t filesize = getFilesize(argv[1]);
 
-    // Frame counter
-    int frame = 0;
+    // Output and Input file
+    data_in = std::ifstream(argv[1], std::ios::binary);
 
-    // This will need some fixes
-    unsigned short *imageBufferR = new unsigned short[10000 * 1572];
-    unsigned short *imageBufferG = new unsigned short[10000 * 1572];
-    unsigned short *imageBufferB = new unsigned short[10000 * 1572];
+    // Graphics
+    std::cout << "---------------------------" << std::endl;
+    std::cout << "   METEOR MSU-MR Decoder" << std::endl;
+    std::cout << "         by Aang23" << std::endl;
+    std::cout << "---------------------------" << std::endl;
+    std::cout << std::endl;
+
+    std::cout << "Processing..." << std::endl;
+
+    MSUMRReader reader;
 
     // Read until EOF
     while (!data_in.eof())
     {
         // Read buffer
-        data_in.read((char *)buffer, BUFFER_SIZE);
+        data_in.read((char *)buffer, 11850);
 
-        // Convert into 10-bits values
-        // 393 byte per channel
-        for (int channel = 0; channel < 6; channel++)
-        {
-            for (int l = 0; l < 393; l++)
-            {
-                uint8_t pixel_buffer_4[5];
-                int pixelpos = 50 + l * 30 + channel * 5;
+        reader.work(buffer);
 
-                pixel_buffer_4[0] = buffer[pixelpos];
-                pixel_buffer_4[1] = buffer[pixelpos + 1];
-                pixel_buffer_4[2] = buffer[pixelpos + 2];
-                pixel_buffer_4[3] = buffer[pixelpos + 3];
-                pixel_buffer_4[4] = buffer[pixelpos + 4];
-
-                // Convert 5 bytes to 4 10-bits values
-                uint16_t pixel1, pixel2, pixel3, pixel4;
-                pixel1 = (pixel_buffer_4[0] << 2) | (pixel_buffer_4[1] >> 6);
-                pixel2 = ((pixel_buffer_4[1] % 64) << 4) | (pixel_buffer_4[2] >> 4);
-                pixel3 = ((pixel_buffer_4[2] % 16) << 6) | (pixel_buffer_4[3] >> 2);
-                pixel4 = ((pixel_buffer_4[3] % 4) << 8) | pixel_buffer_4[4];
-
-                msumrBuffer[channel][l * 4 + 0] = pixel1;
-                msumrBuffer[channel][l * 4 + 1] = pixel2;
-                msumrBuffer[channel][l * 4 + 2] = pixel3;
-                msumrBuffer[channel][l * 4 + 3] = pixel4;
-            }
-        }
-
-        // Channel R
-        for (int i = 0; i < 1572; i++)
-        {
-            uint16_t pixel = msumrBuffer[2][i];
-            imageBufferR[frame * 1572 + i] = pixel * 60;
-        }
-
-        // Channel G
-        for (int i = 0; i < 1572; i++)
-        {
-            uint16_t pixel = msumrBuffer[1][i];
-            imageBufferG[frame * 1572 + i] = pixel * 60;
-        }
-
-        // Channel B
-        for (int i = 0; i < 1572; i++)
-        {
-            uint16_t pixel = msumrBuffer[0][i];
-            imageBufferB[frame * 1572 + i] = pixel * 60;
-        }
-
-        // Frame counter
-        frame++;
+        // Show our progress
+        std::cout << "\rProgress : " << round(((float)data_in.tellg() / (float)filesize) * 1000.0f) / 10.0f << "%     " << std::flush;
     }
 
-    // Print it all out into a .png
-    cimg_library::CImg<unsigned short> finalImage(1572, frame, 1, 3);
+    std::cout << std::endl;
+    std::cout << std::endl;
 
-    cimg_library::CImg<unsigned short> channelImageR(&imageBufferR[0], 1572, frame);
-    cimg_library::CImg<unsigned short> channelImageG(&imageBufferG[0], 1572, frame);
-    cimg_library::CImg<unsigned short> channelImageB(&imageBufferB[0], 1572, frame);
+    std::cout << "MSU-MR Lines            : " << reader.lines << std::endl;
 
-    finalImage.draw_image(0, 0, 0, 0, channelImageR);
-    finalImage.draw_image(0, 0, 0, 1, channelImageG);
-    finalImage.draw_image(0, 0, 0, 2, channelImageB);
+    std::cout << std::endl;
 
-    finalImage.save_png(argv[2]);
+    // Write images out
+    std::cout << "Writing images... (Can take a while)" << std::endl;
+
+    cimg_library::CImg<unsigned short> image1 = reader.getChannel(0);
+    cimg_library::CImg<unsigned short> image2 = reader.getChannel(1);
+    cimg_library::CImg<unsigned short> image3 = reader.getChannel(2);
+    cimg_library::CImg<unsigned short> image4 = reader.getChannel(3);
+    cimg_library::CImg<unsigned short> image5 = reader.getChannel(4);
+    cimg_library::CImg<unsigned short> image6 = reader.getChannel(5);
+
+    std::cout << "Channel 1..." << std::endl;
+    image1.save_png("MSU-MR-1.png");
+
+    std::cout << "Channel 2..." << std::endl;
+    image2.save_png("MSU-MR-2.png");
+
+    std::cout << "Channel 3..." << std::endl;
+    image3.save_png("MSU-MR-3.png");
+
+    std::cout << "Channel 4..." << std::endl;
+    image4.save_png("MSU-MR-4.png");
+
+    std::cout << "Channel 5..." << std::endl;
+    image5.save_png("MSU-MR-5.png");
+
+    std::cout << "Channel 6..." << std::endl;
+    image5.save_png("MSU-MR-6.png");
+
+    std::cout << "221 Composite..." << std::endl;
+    cimg_library::CImg<unsigned short> image221(1572, reader.lines, 1, 3);
+    {
+        image221.draw_image(0, 0, 0, 0, image2);
+        image221.draw_image(0, 0, 0, 1, image2);
+        image221.draw_image(0, 0, 0, 2, image1);
+    }
+    image221.save_png("MSU-MR-RGB-221.png");
+    image221.equalize(1000);
+    image221.normalize(0, std::numeric_limits<unsigned char>::max());
+    image221.save_png("MSU-MR-RGB-221-EQU.png");
+
+    std::cout << "321 Composite..." << std::endl;
+    cimg_library::CImg<unsigned short> image321(1572, reader.lines, 1, 3);
+    {
+        image321.draw_image(0, 0, 0, 0, image3);
+        image321.draw_image(0, 0, 0, 1, image2);
+        image321.draw_image(0, 0, 0, 2, image1);
+    }
+    image321.save_png("MSU-MR-RGB-321.png");
+    image321.equalize(1000);
+    image321.normalize(0, std::numeric_limits<unsigned char>::max());
+    image321.save_png("MSU-MR-RGB-321-EQU.png");
 
     data_in.close();
 }

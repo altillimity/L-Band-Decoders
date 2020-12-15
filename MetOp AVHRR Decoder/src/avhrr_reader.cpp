@@ -3,7 +3,7 @@
 AVHRRReader::AVHRRReader()
 {
     for (int i = 0; i < 5; i++)
-        channels[i] = new unsigned short[5000 * 2048];
+        channels[i] = new unsigned short[10000 * 2048];
     lines = 0;
 }
 

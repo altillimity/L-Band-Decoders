@@ -6,14 +6,15 @@
 #define cimg_display 0
 #include "CImg.h"
 
-class AVHRRReader
+class MSUMRReader
 {
 private:
-    unsigned short *channels[5];
+    unsigned short *channels[6];
+    uint16_t msumrBuffer[6][1572];
 
 public:
-    AVHRRReader();
+    MSUMRReader();
     int lines;
-    void work(uint16_t* buffer);
+    void work(uint8_t *buffer);
     cimg_library::CImg<unsigned short> getChannel(int channel);
 };
