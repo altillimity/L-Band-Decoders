@@ -9,7 +9,8 @@
 #include <complex>
 #include <vector>
 #include <thread>
-
+#include "deframer.h"
+#include "reedsolomon.h"
 #include "viterbi.h"
 #include "diff.h"
 
@@ -94,6 +95,9 @@ int main(int argc, char *argv[])
     FengyunViterbi viterbi1(true, viterbi_ber_threasold, 1, viterbi_outsync_after, 50), viterbi2(true, viterbi_ber_threasold, 1, viterbi_outsync_after, 50);
     FengyunDiff diff;
 
+    SatHelper::ReedSolomon reedSolomon;
+    CADUDeframer deframer;
+
     // Viterbi output buffer
     uint8_t *viterbi1_out = new uint8_t[BUFFER_SIZE];
     uint8_t *viterbi2_out = new uint8_t[BUFFER_SIZE];
@@ -126,6 +130,11 @@ int main(int argc, char *argv[])
     std::cout << std::endl;
 
     int shift = 0, diffin = 0;
+
+    // Work buffers
+    uint8_t frameBuffer[BUFFER_SIZE];
+    int inFrameBuffer = 0;
+    uint8_t rsWorkBuffer[255];
 
     // Read until there is no more data
     while (!data_in.eof())
@@ -265,20 +274,51 @@ int main(int argc, char *argv[])
         diff.work(diff_in, diffin, diff_out);
 
         // Reconstruct into bytes and write to output file
-        for (int i = 0; i < diffin / 4; i++)
+        if (diffin > 0)
         {
-            uint8_t toPush = (diff_out[i * 4] << 6) | (diff_out[i * 4 + 1] << 4) | (diff_out[i * 4 + 2] << 2) | diff_out[i * 4 + 3];
-            data_out.write((char *)&toPush, 1);
-        }
 
-        data_out_total += diffin / 4;
+            inFrameBuffer = 0;
+            // Reconstruct into bytes and write to output file
+            for (int i = 0; i < diffin / 4; i++)
+            {
+                frameBuffer[inFrameBuffer++] = diff_out[i * 4] << 6 | diff_out[i * 4 + 1] << 4 | diff_out[i * 4 + 2] << 2 | diff_out[i * 4 + 3];
+            }
+
+            // Deframe / derand
+            std::vector<std::array<uint8_t, CADU_SIZE>> frames = deframer.work(frameBuffer, inFrameBuffer);
+
+            if (frames.size() > 0)
+            {
+                for (std::array<uint8_t, CADU_SIZE> cadu : frames)
+                {
+                    // RS Decoding
+                    int errors = 0;
+                    for (int i = 0; i < 4; i++)
+                    {
+                        reedSolomon.deinterleave(&cadu[4], rsWorkBuffer, i, 4);
+                        errors = reedSolomon.decode_ccsds(rsWorkBuffer);
+                        reedSolomon.interleave(rsWorkBuffer, &cadu[4], i, 4);
+                    }
+
+                    // Write it out
+                    data_out_total += CADU_SIZE;
+                    data_out.write((char *)&cadu, CADU_SIZE);
+                }
+            }
+        }
 
         // Console stuff
         std::cout << '\r' << "Viterbi 1 : " << (viterbi1.getState() == 0 ? "NO SYNC" : viterbi1.getState() == 1 ? "SYNCING"
                                                                                                                 : "SYNCED")
                   << ", Viterbi 2 : " << (viterbi2.getState() == 0 ? "NO SYNC" : viterbi2.getState() == 1 ? "SYNCING"
-                                                                                                          : "SYNCED")
-                  << ", Data out : " << round(data_out_total / 1e5) / 10.0f << " MB, Progress : " << round(((float)data_in.tellg() / (float)filesize) * 1000.0f) / 10.0f << "%     " << std::flush;
+                                                                                                          : "SYNCED");
+        if (deframer.getState() == 0)
+            std::cout << ", Deframer : NOSYNC" << std::flush;
+        else if (deframer.getState() == 2 | deframer.getState() == 6)
+            std::cout << ", Deframer : SYNCING" << std::flush;
+        else if (deframer.getState() > 6)
+            std::cout << ", Deframer : SYNCED" << std::flush;
+        std::cout << ", CADUs : " << (float)(data_out_total / 1024) << ", Data out : " << round(data_out_total / 1e5) / 10.0f << " MB, Progress : " << round(((float)data_in.tellg() / (float)filesize) * 1000.0f) / 10.0f << "%     " << std::flush;
     }
 
     std::cout << std::endl

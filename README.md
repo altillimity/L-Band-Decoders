@@ -2,6 +2,8 @@
 
 A few small projects aimed at decoding various L-Band satellites
 
+**Note for users updating from older releases : The new MetOp and FengYun decoders now include a deframer. If using MetFy3x, derandomization and Reed-Solomon should be disabled or the file will fail to process. The CADU-Synchroderand is no longer necessary before using the other tools in this repo.**
+
 ### Dependencies
 
 Some projects will require (or / and) :
@@ -23,8 +25,7 @@ The flowcharts require GNU Radio 3.8 or above.
 - Record a baseband 
 - Demodulate with the FY Demodulator flowchart
 - Process the soft symbols with FengYun Decoder (use 3b mode for 3c, seems like the coding was changed)   
-- Use that file in MetFy3x or run it through the CADU RSynchroderand to continue  
-- Run the resulting CADU file through the FengYun VIRR Decoder  
+- Run the resulting CADU file through the FengYun VIRR Decoder / You can also use MetFy3x instead  
 
 # MetOp A/B/C
 
@@ -37,5 +38,4 @@ The flowcharts require GNU Radio 3.8 or above.
 - Record a baseband 
 - Demodulate with the MetOp Demodulator flowchart
 - Process the soft symbols with MetOp Decoder   
-- Use that file in MetFy3x or run it through the CADU RSynchroderand to continue  
-- Run the resulting CADU file through the MetOp AVHRR Decoder  
+- Run the resulting CADU file through the MetOp AVHRR Decoder / You can also use MetFy3x instead  

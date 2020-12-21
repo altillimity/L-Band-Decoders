@@ -2,7 +2,8 @@
 #include <fstream>
 #include <complex>
 #include <vector>
-
+#include "deframer.h"
+#include "reedsolomon.h"
 #include "viterbi.h"
 
 #ifndef _WIN32
@@ -66,6 +67,9 @@ int main(int argc, char *argv[])
     // MetOp Viterbi decoder
     MetopViterbi viterbi(true, viterbi_ber_threasold, 1, viterbi_outsync_after, 50);
 
+    SatHelper::ReedSolomon reedSolomon;
+    CADUDeframer deframer;
+
     // Viterbi output buffer
     uint8_t *viterbi_out = new uint8_t[BUFFER_SIZE];
 
@@ -88,6 +92,9 @@ int main(int argc, char *argv[])
     std::cout << "Outsinc after: " << viterbi_outsync_after << std::endl;
     std::cout << "---------------------------" << std::endl;
     std::cout << std::endl;
+
+    // Work buffers
+    uint8_t rsWorkBuffer[255];
 
     // Read until EOF
     while (!data_in.eof())
@@ -112,14 +119,42 @@ int main(int argc, char *argv[])
         // Push into Viterbi
         int num_samp = viterbi.work(buffer, BUFFER_SIZE, viterbi_out);
 
-        data_out_total += num_samp;
-
-        // Write output
+        // Reconstruct into bytes and write to output file
         if (num_samp > 0)
-            data_out.write((char *)viterbi_out, num_samp);
+        {
+            // Deframe / derand
+            std::vector<std::array<uint8_t, CADU_SIZE>> frames = deframer.work(viterbi_out, num_samp);
+
+            if (frames.size() > 0)
+            {
+                for (std::array<uint8_t, CADU_SIZE> cadu : frames)
+                {
+                    // RS Decoding
+                    int errors = 0;
+                    for (int i = 0; i < 4; i++)
+                    {
+                        reedSolomon.deinterleave(&cadu[4], rsWorkBuffer, i, 4);
+                        errors = reedSolomon.decode_ccsds(rsWorkBuffer);
+                        reedSolomon.interleave(rsWorkBuffer, &cadu[4], i, 4);
+                    }
+
+                    // Write it out
+                    data_out_total += CADU_SIZE;
+                    data_out.write((char *)&cadu, CADU_SIZE);
+                }
+            }
+        }
 
         // Console stuff
-        std::cout << '\r' << "Viterbi : " << (viterbi.getState() == 0 ? "NO SYNC" : viterbi.getState() == 1 ? "SYNCING" : "SYNCED") << ", Data out : " << round(data_out_total / 1e5) / 10.0f << " MB, Progress : " << round(((float)data_in.tellg() / (float)filesize) * 1000.0f) / 10.0f << "%     " << std::flush;
+        std::cout << '\r' << "Viterbi : " << (viterbi.getState() == 0 ? "NO SYNC" : viterbi.getState() == 1 ? "SYNCING"
+                                                                                                            : "SYNCED");
+        if (deframer.getState() == 0)
+            std::cout << ", Deframer : NOSYNC" << std::flush;
+        else if (deframer.getState() == 2 | deframer.getState() == 6)
+            std::cout << ", Deframer : SYNCING" << std::flush;
+        else if (deframer.getState() > 6)
+            std::cout << ", Deframer : SYNCED" << std::flush;
+        std::cout << ", CADUs : " << (float)(data_out_total / 1024) << ", Data out : " << round(data_out_total / 1e5) / 10.0f << " MB, Progress : " << round(((float)data_in.tellg() / (float)filesize) * 1000.0f) / 10.0f << "%     " << std::flush;
     }
 
     std::cout << std::endl
