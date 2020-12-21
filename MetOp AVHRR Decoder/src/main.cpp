@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
             // Count frames
             ccsds += ccsdsFrames.size();
 
-            // Push into processor (filtering APID 64)
+            // Push into processor (filtering APID 103 and 104)
             for (libccsds::CCSDSPacket &pkt : ccsdsFrames)
             {
                 if (pkt.header.apid == 103 || pkt.header.apid == 104)
