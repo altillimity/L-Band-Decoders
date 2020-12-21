@@ -196,6 +196,7 @@ std::vector<std::array<uint8_t, CADU_SIZE>> CADUDeframer::work(uint8_t *input, s
                     if (errors == 5)
                     {
                         state = THRESOLD_STATE_0;
+                        bit_inversion = false;
                         //skip = 1;
                         errors = 0;
                         sep_errors = 0;
@@ -234,6 +235,7 @@ std::vector<std::array<uint8_t, CADU_SIZE>> CADUDeframer::work(uint8_t *input, s
                     if (state_2_bits_count >= 5 * 1024 * 8)
                     {
                         state = THRESOLD_STATE_0;
+                        bit_inversion = false;
                         //bitsToIncrement = 1;
                         errors = 0;
                         sep_errors = 0;
