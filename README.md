@@ -14,6 +14,10 @@ Some projects will require (or / and) :
 
 The flowcharts require GNU Radio 3.8 or above.
 
+### Standalone Demodulators
+
+All flowcharts contained in this repository can be substitued with those standalone demodulators. It will be easier and faster to use for most users https://github.com/altillimity/Standalone-Demodulators.
+
 # FengYun-3 A/B/C
 
 **Supported downlink :** AHRPT, 1704.5Mhz (3C 1701.4Mhz)    
