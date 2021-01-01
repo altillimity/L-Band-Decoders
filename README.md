@@ -43,3 +43,4 @@ All flowcharts contained in this repository can be substitued with those standal
 - Demodulate with the MetOp Demodulator flowchart
 - Process the soft symbols with MetOp Decoder   
 - Run the resulting CADU file through the MetOp AVHRR Decoder / You can also use MetFy3x instead  
+- Run the resulting CADU file through the MetOp AMSU Decoder to get AMSU A1 and A2 data  
