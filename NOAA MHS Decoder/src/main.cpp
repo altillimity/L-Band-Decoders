@@ -16,6 +16,8 @@ inline bool getBit(T &data, int bit)
     return (data >> bit) & 1;
 }
 
+unsigned short *channels[5];
+
 int main(int argc, char *argv[])
 {
     //Credits "banner"
@@ -25,39 +27,15 @@ int main(int argc, char *argv[])
     std::cout << "---------------------" << std::endl;
     std::cout << std::endl;
 
-    TCLAP::CmdLine cmd("MHS Decoder by Zbychu", ' ', "1.0");
-
-    // Define the arguments
-    TCLAP::ValueArg<int> valueChannel("c", "channel", "Channel to extract", true, 0, "channel");
-    TCLAP::ValueArg<std::string> valueInput("i", "input", "Raw input file", true, "", "file");
-    TCLAP::ValueArg<std::string> valueOutput("o", "output", "Output image file", true, "", "image.png");
-
-    //add the arguments
-    cmd.add(valueInput);
-    cmd.add(valueOutput);
-    cmd.add(valueChannel);
-
-    //parse arguments
-    try
-    {
-        cmd.parse(argc, argv);
-    }
-    catch (TCLAP::ArgException &e)
-    {
-        std::cout << e.error() << '\n';
-        return 0;
-    }
-    //get the channel number
-    int channel = valueChannel.getValue();
-    
     //initalize the data input stream
-    std::ifstream data_in(valueInput.getValue(), std::ios::binary);
+    std::ifstream data_in(argv[1], std::ios::binary);
     //make the buffer
     uint16_t buffer[BUFFER_SIZE / 2];
     //AIP frame count
     int totalAIPFrames = 0;
     //image data
-    std::vector<unsigned short> imagebuffer;
+    for (int i = 0; i < 5; i++)
+        channels[i] = new unsigned short[10000 * 90];
     //line vount
     int line = 0;
 
@@ -91,27 +69,28 @@ int main(int argc, char *argv[])
                 {
                     for (int j = 0; j < 18; j += 2)
                     {
-                        MHSWord[j / 2] = (buffer[104 * i + 78 + j] % (int)pow(2, 8)) << 8 | (buffer[104 * i + 79 + j] % (int)pow(2, 8));
+                        MHSWord[j / 2] = (buffer[104 * i + 79 + j] % (int)pow(2, 8)) << 8 | (buffer[104 * i + 78 + j] % (int)pow(2, 8));
                     }
                 }
                 else if (MHSnum > 27 && MHSnum < 53)
                 {
                     for (int j = 0; j < 50; j += 2)
                     {
-                        MHSWord[j / 2 + 1 + 25 * MHSnum] = (buffer[104 * i + 46 + j] % (int)pow(2, 8)) << 8 | (buffer[104 * i + 47 + j] % (int)pow(2, 8));
+                        MHSWord[j / 2 + 1 + 25 * MHSnum] = (buffer[104 * i + 47 + j] % (int)pow(2, 8)) << 8 | (buffer[104 * i + 46 + j] % (int)pow(2, 8));
                     }
                 }
                 else if (MHSnum == 53)
                 {
                     for (int j = 0; j < 18; j += 2)
                     {
-                        MHSWord[642 + j / 2] = (buffer[104 * i + 46 + j] % (int)pow(2, 8)) << 8 | (buffer[104 * i + 47 + j] % (int)pow(2, 8));
+                        MHSWord[642 + j / 2] = (buffer[104 * i + 47 + j] % (int)pow(2, 8)) << 8 | (buffer[104 * i + 46 + j] % (int)pow(2, 8));
                     }
 
                     for (int j = 0; j < 540; j += 6)
                     {
                         //idk why I needed to add +49 there, but doesn't work without it
-                        imagebuffer.push_back(MHSWord[j + channel + 49]);
+                        for(int k = 0; k<5; k++)
+                            channels[k][line * 90 + 90 - j / 6] = MHSWord[j + k + 50];
                     }
                     line = line + 1;
                 }
@@ -129,14 +108,14 @@ int main(int argc, char *argv[])
                 {
                     for (int j = 0; j < 36; j += 2)
                     {
-                        MHSWord[j / 2] = (buffer[104 * i + 61 + j] % (int)pow(2, 8)) << 8 | (buffer[104 * i + 62 + j] % (int)pow(2, 8));
+                        MHSWord[j / 2] = (buffer[104 * i + 62 + j] % (int)pow(2, 8)) << 8 | (buffer[104 * i + 61 + j] % (int)pow(2, 8));
                     }
                 }
                 else if (MHSnum > 36 && MHSnum < 80)
                 {
                     for (int j = 0; j < 50; j += 2)
                     {
-                        MHSWord[j / 2 + 1 + 25 * MHSnum] = (buffer[104 * i + 47 + j] % (int)pow(2, 8)) << 8 | (buffer[104 * i + 48 + j] % (int)pow(2, 8));
+                        MHSWord[j / 2 + 1 + 25 * MHSnum] = (buffer[104 * i + 48 + j] % (int)pow(2, 8)) << 8 | (buffer[104 * i + 47 + j] % (int)pow(2, 8));
                     }
                 }
                 if (MHSnum == 79)
@@ -145,7 +124,8 @@ int main(int argc, char *argv[])
                     for (int j = 0; j < 540; j += 6)
                     {
                         //idk why I needed to add +49 there, but doesn't work without it
-                        imagebuffer.push_back(MHSWord[j + channel + 49]);
+                        for (int k = 0; k < 5; k++)
+                            channels[k][line * 90 + 90 - j / 6] = MHSWord[j + k + 50];
                     }
 
                     line = line + 1;
@@ -163,26 +143,27 @@ int main(int argc, char *argv[])
                 if (MHSnum == 0)
                 {
                     std::fill_n(MHSWord, 643, 0);
-                    MHSWord[0] = (buffer[104 * i + 95] % (int)pow(2, 8)) << 8 | (buffer[104 * i + 96] % (int)pow(2, 8));
+                    MHSWord[0] = (buffer[104 * i + 96] % (int)pow(2, 8)) << 8 | (buffer[104 * i + 95] % (int)pow(2, 8));
                 }
                 else if (MHSnum > 0 && MHSnum < 26)
                 {
                     for (int j = 0; j < 50; j += 2)
                     {
-                        MHSWord[j / 2 + 1 + 25 * MHSnum] = (buffer[104 * i + 47 + j] % (int)pow(2, 8)) << 8 | (buffer[104 * i + 48 + j] % (int)pow(2, 8));
+                        MHSWord[j / 2 + 1 + 25 * MHSnum] = (buffer[104 * i + 48 + j] % (int)pow(2, 8)) << 8 | (buffer[104 * i + 47 + j] % (int)pow(2, 8));
                     }
                 }
                 else if (MHSnum == 26)
                 {
                     for (int j = 0; j < 34; j += 2)
                     {
-                        MHSWord[642 + j / 2] = (buffer[104 * i + 47 + j] % (int)pow(2, 8)) << 8 | (buffer[104 * i + 48 + j] % (int)pow(2, 8));
+                        MHSWord[642 + j / 2] = (buffer[104 * i + 48 + j] % (int)pow(2, 8)) << 8 | (buffer[104 * i + 47 + j] % (int)pow(2, 8));
                     }
 
                     for (int j = 0; j < 540; j += 6)
                     {
                         //idk why I needed to add +49 there, but doesn't work without it
-                        imagebuffer.push_back(MHSWord[j + channel + 49]);
+                        for (int k = 0; k < 5; k++)
+                            channels[k][line * 90 + 90 - j / 6] = MHSWord[j + k + 50];
                     }
 
                     line = line + 1;
@@ -205,7 +186,34 @@ int main(int argc, char *argv[])
     std::cout<<std::endl;
 
     //create an image
-    cimg_library::CImg<unsigned short> outputImage(&imagebuffer[0], 90, line + 1);
+    cimg_library::CImg<unsigned short> channel1(channels[0], 90, line + 1, 1, 1);
+    cimg_library::CImg<unsigned short> channel2(channels[1], 90, line + 1, 1, 1);
+    cimg_library::CImg<unsigned short> channel3(channels[2], 90, line + 1, 1, 1);
+    cimg_library::CImg<unsigned short> channel4(channels[3], 90, line + 1, 1, 1);
+    cimg_library::CImg<unsigned short> channel5(channels[4], 90, line + 1, 1, 1);
+    cimg_library::CImg<unsigned short> imgAll(270, (line + 1) * 2);
+    imgAll.fill(0);
+    
+
+    channel1.equalize(1000);
+    channel2.equalize(1000);
+    channel3.equalize(1000);
+    channel4.equalize(1000);
+    channel5.equalize(1000);
+    
+
+    imgAll.draw_image(0, 0, channel1);
+    imgAll.draw_image(90, 0, channel2);
+    imgAll.draw_image(180, 0, channel3);
+    imgAll.draw_image(0, line+1, channel4);
+    imgAll.draw_image(90, line+1, channel5);
     //save the image
-    outputImage.save_bmp(valueOutput.getValue().c_str());
+    
+    channel1.save_png("MHS-1.png");
+    channel2.save_png("MHS-2.png");
+    channel3.save_png("MHS-3.png");
+    channel4.save_png("MHS-4.png");
+    channel5.save_png("MHS-5.png");
+    imgAll.save_png("MHS-All.png");
+    
 }

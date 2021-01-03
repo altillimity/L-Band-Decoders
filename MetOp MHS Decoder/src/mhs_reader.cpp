@@ -25,7 +25,7 @@ void MHSReader::work(libccsds::CCSDSPacket &packet)
     {
         for (int i = 0; i < 90; i++)
         {
-            channels[4 - channel][lines * 90 + 90 - i] = lineBuffer[i * 6 + channel];
+            channels[4 - channel][lines * 90 + 90 - i] = lineBuffer[i * 6 + channel+3];
         }
     }
 
