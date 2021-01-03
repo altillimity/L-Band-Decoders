@@ -83,6 +83,7 @@
         "numbers": "cpp",
         "scoped_allocator": "cpp",
         "shared_mutex": "cpp",
-        "span": "cpp"
+        "span": "cpp",
+        "filesystem": "cpp"
     }
 }

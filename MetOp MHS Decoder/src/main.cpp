@@ -42,7 +42,8 @@ int main(int argc, char *argv[])
     // Graphics
     std::cout << "---------------------------" << std::endl;
     std::cout << "  MHS Decoder by Aang23" << std::endl;
-    std::cout << "         MetOp" << std::endl;
+    std::cout << "           MetOp" << std::endl;
+    std::cout << "      Fixed by Zbychu"       << std::endl;
     std::cout << "---------------------------" << std::endl;
     std::cout << std::endl;
 
