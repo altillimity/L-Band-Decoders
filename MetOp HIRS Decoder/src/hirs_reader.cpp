@@ -7,33 +7,6 @@ HIRSReader::HIRSReader()
     lines = 0;
 }
 
-uint16_t reverse16Bits(uint16_t v)
-{
-    uint16_t r = 0;
-    for (int i = 0; i < 16; ++i, v >>= 1)
-        r = (r << 1) | (v & 0x01);
-    return r;
-}
-
-/** Shift an array right.
- * @param ar The array to shift.
- * @param size The number of array elements.
- * @param shift The number of bits to shift.
- */
-void shift_right(unsigned char *ar, int size, int shift)
-{
-    int carry = 0; // Clear the initial carry bit.
-    while (shift--)
-    { // For each bit to shift ...
-        for (int i = size - 1; i >= 0; --i)
-        {                                      // For each element of the array from high to low ...
-            int next = (ar[i] & 1) ? 0x80 : 0; // ... if the low bit is set, set the carry bit.
-            ar[i] = carry | (ar[i] >> 1);      // Shift the element one bit left and addthe old carry.
-            carry = next;                      // Remember the old carry for next time.
-        }
-    }
-}
-
 template <typename T>
 constexpr void shift_array_left(T *arr, const size_t size, const size_t bits, const bool zero = false)
 {
@@ -79,7 +52,7 @@ void HIRSReader::work(libccsds::CCSDSPacket &packet)
 
     int pos = 14;
 
-    shift_array_left<uint8_t>(packet.payload.data(), 2320, 27);
+    shift_array_left<uint8_t>(packet.payload.data(), 2320, 26);
 
     for (int i = 0; i < 56 * 60; i += 20)
     {
@@ -103,6 +76,18 @@ void HIRSReader::work(libccsds::CCSDSPacket &packet)
         lineBuffer[i + 17] = packet.payload[pos + 26] << 5 | packet.payload[pos + 27] >> 3;                                                 // Channel 18
         lineBuffer[i + 18] = (packet.payload[pos + 27] & 0x07) << 10 | packet.payload[pos + 28] << 2 | packet.payload[pos + 29] >> 6;       // Channel 19
         lineBuffer[i + 19] = (packet.payload[pos + 29] & 0b00111111) << 7 | packet.payload[pos + 30] >> 1;                                  // Channel 20
+
+        for (int ch = 0; ch < 20; ch++)
+        {
+            bool sign = (lineBuffer[i + ch] >> 12) & 0b1;
+
+            lineBuffer[i + ch] = lineBuffer[i + ch] & 0b111111111111;
+
+            if (sign)
+                lineBuffer[i + ch] = 4096 + lineBuffer[i + ch];
+            else
+                lineBuffer[i + ch] = 4096 - lineBuffer[i + ch];
+        }
 
         pos += 36;
     }

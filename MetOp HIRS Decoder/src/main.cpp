@@ -140,6 +140,7 @@ int main(int argc, char *argv[])
         imageAll.draw_image(56 * 3, height * 3, 0, 0, hirsreader.getChannel(18));
         imageAll.draw_image(56 * 4, height * 3, 0, 0, hirsreader.getChannel(19));
     }
+    imageAll.resize(imageAll.width() * 10, imageAll.height() * 10);
     imageAll.save_png("HIRS-ALL.png");
 
     data_in.close();
