@@ -97,7 +97,7 @@ void HIRSReader::work(libccsds::CCSDSPacket &packet)
     {
         for (int i = 0; i < 56; i++)
         {
-            channels[channel][lines * 56 + i] = (lineBuffer[i * 20 + channel]);
+            channels[channel][lines * 56 + 55 - i] = (lineBuffer[i * 20 + channel]);
         }
     }
 
