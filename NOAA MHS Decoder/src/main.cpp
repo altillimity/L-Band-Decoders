@@ -4,7 +4,6 @@
 #define cimg_use_png
 #define cimg_display 0
 #include "CImg.h"
-#include "tclap/CmdLine.h"
 
 // Processing buffer size
 #define BUFFER_SIZE (11090 * 2)
