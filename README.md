@@ -45,3 +45,4 @@ All flowcharts contained in this repository can be substitued with those standal
 - Run the resulting CADU file through the MetOp AVHRR Decoder / You can also use MetFy3x instead  
 - Run the resulting CADU file through the MetOp AMSU Decoder to get AMSU A1 and A2 data  
 - Run the resulting CADU file through the MetOp MHS Decoder to get MHS data  
+- Run the resulting CADU file through the MetOp MHS Decoder to get HIRS data - The HIRS instrument is only functional onboard MetOp-A  

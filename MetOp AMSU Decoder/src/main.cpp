@@ -78,12 +78,12 @@ int main(int argc, char *argv[])
             // Push into processor (filtering APID 64)
             for (libccsds::CCSDSPacket &pkt : ccsdsFrames)
             {
-                if (pkt.header.apid == 39 && pkt.payload.size() == 2096)
+                if (pkt.header.apid == 39)
                 {
                     a1reader.work(pkt);
                     amsu1_ccsds++;
                 }
-                if (pkt.header.apid == 40 && pkt.payload.size() == 1136)
+                if (pkt.header.apid == 40)
                 {
                     a2reader.work(pkt);
                     amsu2_ccsds++;
