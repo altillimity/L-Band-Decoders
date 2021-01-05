@@ -1,8 +1,8 @@
-#NOAA HIRS Decoder
+# NOAA HIRS Decoder
 
 This program decoded the HIRS instrument from NOAA satellites' HRPT. Can also process raw TIP frames feom the DSB downlink (by using "dsb" as a 2nd argument)
 
-###Usage:
+### Usage:
 
 `NOAA-HIRS-Decoder demodoutput.raw16`
 

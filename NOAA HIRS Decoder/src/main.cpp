@@ -10,6 +10,13 @@
 
 int main(int argc, char *argv[])
 {
+
+    std::cout << "---------------------" << std::endl;
+    std::cout << "  NOAA HIRS Decoder  " << std::endl;
+    std::cout << "      by Zbychu      " << std::endl;
+    std::cout << "---------------------" << std::endl;
+    std::cout << std::endl;
+
     const int HIRSPositions[36] = {16, 17, 22, 23, 26, 27, 30, 31, 34, 35, 38, 39, 42, 43, 54, 55, 58, 59, 62, 63, 66, 67, 70, 71, 74, 75, 78, 79, 82, 83, 84, 85, 88, 89, 92, 93};
     std::vector<std::array<uint8_t, 104>> tipFrames;
 
