@@ -6,7 +6,7 @@
 
 #define BUFFER_SIZE (11090 * 2)
 
-class TIPReader
+class NOAAFrameReader
 {
 private:
     std::array<uint8_t, 104> frameBuffer;
@@ -14,7 +14,7 @@ private:
     inline bool getBit(T &data, int bit);
 
 public:
-    TIPReader();
+    NOAAFrameReader();
     int frames;
-    std::vector<std::array<uint8_t, 104>> readTIP(std::ifstream inputStream);
+    std::vector<std::array<uint8_t, 104>> readFrames(std::ifstream inputStream, int frame);
 };

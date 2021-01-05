@@ -1,17 +1,17 @@
-#include "TIP_reader.h"
+#include "noaa_frame_reader.h"
 
-TIPReader::TIPReader()
+NOAAFrameReader::NOAAFrameReader()
 {
     frames = 0;
 }
 
 template <typename T>
-inline bool TIPReader::getBit(T &data, int bit)
+inline bool NOAAFrameReader::getBit(T &data, int bit)
 {
     return (data >> bit) & 1;
 }
 
-std::vector<std::array<uint8_t, 104>> TIPReader::readTIP(std::ifstream inputStream)
+std::vector<std::array<uint8_t, 104>> NOAAFrameReader::readFrames(std::ifstream inputStream, int frame)
 {
     uint16_t buffer[BUFFER_SIZE / 2];
     std::vector<std::array<uint8_t, 104>> out;
@@ -25,7 +25,7 @@ std::vector<std::array<uint8_t, 104>> TIPReader::readTIP(std::ifstream inputStre
         bool bit2 = getBit(buffer[6], 7);
         int frmNum = bit1 << 1 | bit2;
         //init the MHS buffer
-        if (frmNum == 1)
+        if (frmNum == frame)
         {
             for (int i = 0; i < 5; i++)
             {
