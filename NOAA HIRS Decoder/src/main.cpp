@@ -21,9 +21,12 @@ int main(int argc, char *argv[])
     std::vector<std::array<uint8_t, 104>> tipFrames;
 
     std::string arg2;
-    if(argv[2]!= NULL){
+    if (argv[2] != NULL)
+    {
         arg2 = argv[2];
-    }else{
+    }
+    else
+    {
         arg2 = "";
     }
 
@@ -40,10 +43,11 @@ int main(int argc, char *argv[])
             std::copy(std::begin(buffer), std::end(buffer), std::begin(arrayBuffer));
             tipFrames.push_back(arrayBuffer);
         }
+        data_in.close();
     }
     else
     {
-        std::cout << "Reading HRPT frames" << std::endl;
+        std::cout << "Reading HRPT frames" << '\n' << std::endl;
         NOAAFrameReader tipreader;
         tipFrames = tipreader.readFrames(std::ifstream(argv[1], std::ios::binary), 1);
     }
@@ -58,11 +62,12 @@ int main(int argc, char *argv[])
         {
             HIRS_data[i][pos] = tipFrames[i][j];
             pos++;
+            //std::cout<<pos<<std::endl;
         }
         uint16_t enct = ((HIRS_data[i][2] % (int)pow(2, 5)) << 1) | (HIRS_data[i][3] >> 7);
         //std::cout << "element number:" << enct << " encoder position:" << (unsigned int)HIRS_data[i][0] << std::endl;
 
-        if (enct + 1 == (uint8_t)HIRS_data[i][0])
+        if (enct + 1 == (uint8_t)HIRS_data[i][0] && enct < 56)
         {
             imageBuffer[0][enct][line] = (HIRS_data[i][3] & 0b00111111) << 7 | HIRS_data[i][4] >> 1;
             imageBuffer[16][enct][line] = (HIRS_data[i][4] & 0b00000001) << 12 | HIRS_data[i][5] << 4 | (HIRS_data[i][6] & 0b11110000) >> 4;
@@ -85,11 +90,18 @@ int main(int argc, char *argv[])
             imageBuffer[15][enct][line] = (HIRS_data[i][32] & 0b00001111) << 9 | HIRS_data[i][33] << 1 | (HIRS_data[i][34] & 0b10000000) >> 7;
             imageBuffer[8][enct][line] = (HIRS_data[i][34] & 0b01111111) << 6 | (HIRS_data[i][35] & 0b11111100) >> 2;
 
-            if (enct + 1 > 55 && ((tipFrames[i + 1][17] % (int)pow(2, 5)) << 1) | (tipFrames[i + 1][22] >> 7) + 1 > 55)
+            unsigned int next;
+            if (tipFrames.size() > i)
+            {
+                next = ((tipFrames[i + 1][22] % (int)pow(2, 5)) << 1) | (tipFrames[i + 1][23] >> 7);
+            }
+            else
+                next = 56;
+            
+            if (enct + 1 > 55 && next > 55)
             {
                 line++;
             }
-            //std::cout<<line<<std::endl;
         }
     }
     for (int channel = 0; channel < 20; channel++)
@@ -110,6 +122,9 @@ int main(int argc, char *argv[])
             }
         }
     }
+
+    std::cout<<"TIP Frames found  : "<<tipFrames.size()<<std::endl;
+    std::cout<<"HIRS Lines foud   : "<<line<<std::endl;
     std::vector<unsigned short> channelBuffer;
 
     cimg_library::CImg<unsigned short> allchannels(280, line * 4);
