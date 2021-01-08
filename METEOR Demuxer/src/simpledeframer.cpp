@@ -65,6 +65,24 @@ std::vector<std::vector<uint8_t>> SimpleDeframer<SYNC_T, SYNC_SIZE, FRAME_SIZE, 
                     }
                 }
 
+                // New ASM, ABORT! and process the new one
+                if (shifter == ASM_SYNC)
+                {
+                    // Fill up what we're missing
+                    for (int b = 0; b < FRAME_SIZE - outputBits; b++)
+                        pushBit(0);
+
+                    writeFrame = false;
+                    wroteBits = 0;
+                    outputBits = 0;
+                    framesOut.push_back(frameBuffer);
+                    frameBuffer.clear();
+
+                    writeFrame = true;
+
+                    continue;
+                }
+
                 // Push current bit
                 pushBit(bit);
                 outputBits++;
