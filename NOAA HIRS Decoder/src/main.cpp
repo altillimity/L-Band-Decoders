@@ -47,7 +47,8 @@ int main(int argc, char *argv[])
     }
     else
     {
-        std::cout << "Reading HRPT frames" << '\n' << std::endl;
+        std::cout << "Reading HRPT frames" << '\n'
+                  << std::endl;
         NOAAFrameReader tipreader;
         tipFrames = tipreader.readFrames(std::ifstream(argv[1], std::ios::binary), 1);
     }
@@ -97,7 +98,7 @@ int main(int argc, char *argv[])
             }
             else
                 next = 56;
-            
+
             if (enct + 1 > 55 && next > 55)
             {
                 line++;
@@ -123,8 +124,8 @@ int main(int argc, char *argv[])
         }
     }
 
-    std::cout<<"TIP Frames found  : "<<tipFrames.size()<<std::endl;
-    std::cout<<"HIRS Lines foud   : "<<line<<std::endl;
+    std::cout << "TIP Frames found  : " << tipFrames.size() << std::endl;
+    std::cout << "HIRS Lines foud   : " << line << std::endl;
     std::vector<unsigned short> channelBuffer;
 
     cimg_library::CImg<unsigned short> allchannels(280, line * 4);
