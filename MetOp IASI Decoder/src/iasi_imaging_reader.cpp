@@ -24,7 +24,7 @@ void IASIIMGReader::work(libccsds::CCSDSPacket &packet)
             for (int y = 0; y < 64; y++)
             {
                 if (y >= 48)
-                    ir_channel[(lines * 64 + i) * (30 * 64) + ((counter - 1) * 64) + (y)] = (values[y * 64 + i] + 30) << 3;
+                    ir_channel[(lines * 64 + i) * (30 * 64) + ((counter - 1) * 64) + (y)] = (values[y * 64 + i] + 10) << 3;
                 else
                     ir_channel[(lines * 64 + i) * (30 * 64) + ((counter - 1) * 64) + (y)] = values[y * 64 + i] << 3;
             }
