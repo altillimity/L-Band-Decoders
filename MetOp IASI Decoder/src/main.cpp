@@ -5,6 +5,7 @@
 #include <cstring>
 #include <ccsds/demuxer.h>
 #include <ccsds/vcdu.h>
+#include <filesystem>
 #include "iasi_imaging_reader.h"
 #include "iasi_reader.h"
 
@@ -22,10 +23,19 @@ std::ifstream data_in;
 
 int main(int argc, char *argv[])
 {
-    if (argc != 2)
+    if (argc != 2 && argc != 3)
     {
-        std::cout << "Usage : " << argv[0] << " inputFrames.bin" << std::endl;
+        std::cout << "Usage : " << argv[0] << " inputFrames.bin [-a]" << std::endl;
         return 0;
+    }
+
+    bool write_all = false;
+
+    // Terra mode?
+    if (argc == 3)
+    {
+        if (std::string(argv[2]) == "-a")
+            write_all = true;
     }
 
     // Complete filesize
@@ -107,11 +117,16 @@ int main(int argc, char *argv[])
     // Write images out
     std::cout << "Writing images... (Can take a while)" << std::endl;
 
-    //for (int i = 0; i < 8461; i++)
-    //{
-    //    std::cout << "Channel " << (i + 1) << std::endl;
-    //    iasireader.getChannel(i).save_png(std::string("IASI-" + std::to_string(i + 1) + ".png").c_str());
-    //}
+    if (write_all)
+    {
+        if (!std::filesystem::exists("IASI_all"))
+            std::filesystem::create_directory("IASI_ALL");
+        for (int i = 0; i < 8461; i++)
+        {
+            std::cout << "Channel " << (i + 1) << std::endl;
+            iasireader.getChannel(i).save_png(std::string("IASI_ALL/IASI-" + std::to_string(i + 1) + ".png").c_str());
+        }
+    }
 
     std::cout << "Channel IR imaging..." << std::endl;
     iasireader_img.getIRChannel().save_png(std::string("IASI-IMG.png").c_str());

@@ -3,6 +3,9 @@ cmake_minimum_required (VERSION 3.0.0)
 project (MetOp-IASI-Decoder)
 file(GLOB_RECURSE MetOp-IASI-Decoder_CPPS src/*.cpp)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 add_executable(MetOp-IASI-Decoder ${MetOp-IASI-Decoder_CPPS})
 
 target_include_directories(MetOp-IASI-Decoder PUBLIC src)
