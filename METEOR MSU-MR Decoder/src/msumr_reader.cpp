@@ -4,6 +4,7 @@ MSUMRReader::MSUMRReader()
 {
     for (int i = 0; i < 6; i++)
         channels[i] = new unsigned short[10000 * 1572];
+    lines = 0;
 }
 
 void MSUMRReader::work(uint8_t *buffer)
