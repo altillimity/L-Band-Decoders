@@ -84,6 +84,7 @@
         "scoped_allocator": "cpp",
         "shared_mutex": "cpp",
         "span": "cpp",
-        "filesystem": "cpp"
+        "filesystem": "cpp",
+        "*.ipp": "cpp"
     }
 }
