@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 
     uint8_t HIRS_data[tipFrames.size()][36];
     int line = 0;
-    uint16_t imageBuffer[20][56][1000];
+    uint16_t imageBuffer[20][56][300];
     for (int i = 0; i < tipFrames.size(); i++)
     {
         int pos = 0;
