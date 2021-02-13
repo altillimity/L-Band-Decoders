@@ -47,6 +47,10 @@ int main(int argc, char *argv[])
     std::vector<std::vector<uint8_t>> amsuA2Data = amsuDeframer.work(amsuA2words);
     std::vector<std::vector<uint8_t>> amsuA1Data = amsuA1Deframer.work(amsuA1words);
 
+    std::cout<<"AIP Frames      :"<<aipFrames.size()<<std::endl;
+    std::cout<<"AMSU-A1 Frames  :"<<amsuA1Data.size()<<std::endl;
+    std::cout << "AMSU-A2 Frames  :" << amsuA2Data.size() << std::endl;
+
     uint16_t image_bufferA2[2][30 * amsuA2Data.size()];
     uint16_t image_bufferA1[13][30 * amsuA1Data.size()];
 
